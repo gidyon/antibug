@@ -1,0 +1,214 @@
+syntax = "proto3";
+
+package antibug.culture;
+
+option go_package="culture";
+
+import "google/protobuf/empty.proto";
+import "google/api/annotations.proto";
+import "protoc-gen-swagger/options/annotations.proto";
+
+// Culture is a lab result after culturing process
+message Culture {
+    string culture_id = 1;
+    string lab_tech_id = 2;
+    string hospital_id = 3;
+    string county_code = 4;
+    string sub_county_code = 5;
+    string patient_id = 6;
+    string patient_gender = 7;
+    string patient_age = 8;
+    repeated string editors = 9;
+    TestMethod test_method = 10;
+    string culture_source = 11;
+    repeated string pathogens_found = 12;
+    repeated string antimicrobials_used = 13;
+    repeated LabTestResult culture_results = 14;
+    int64 results_timestamp_sec = 15;
+}
+
+// Pathogen is a micro-organism causing infection
+message Pathogen {
+    string pathogen_id = 1;
+    string pathogen_name = 2;
+    string pathogen_category = 3;
+}
+
+// Antimicrobial is a substance that acts againsts a pathogen
+message Antimicrobial {
+    string antimicrobial_id = 1;
+    string antimicrobial_name = 2;
+    string antimicrobial_class = 3;
+}
+
+// Label is tag/boundary of antimicrobial used for culturing based on its action against the pathogen
+enum Label {
+    // Antimicrobial was effective
+    SUSCEPTIBLE = 0;
+    // The antimicrobial was effective but under a given dosage
+    DOSE_SUSCEPTIBLE = 2;
+    // Not effective in certain concentrations
+    INTERMEDIATE = 3;
+    // Not effective at all
+    RESISTANT = 4;
+}
+
+// TestMethod is method used to conduct the testing
+enum TestMethod {
+    // Default test method. Widely used
+    DISK_DIFFUSION = 0;
+}
+
+// LabTestResult is a single result obtained after the culturing process
+message LabTestResult {
+    string pathogen_name  = 1;
+    string pathogen_id = 2;
+    string antimicrobial_id  = 3;
+    string antimicrobial_name = 4;
+    string disk_diameter  = 5;
+    string non_diffusion_result = 6;
+    string result_comment = 7;
+    Label label = 8;
+}
+
+// CreateCultureRequest is request to add a culture
+message CreateCultureRequest {
+    Culture culture = 1;
+}
+
+// CreateCultureResponse is response from CreateCultureRequest call
+message CreateCultureResponse {
+    string culture_id = 1;
+}
+
+// UpdateCultureRequest is request to update a culture resource
+message UpdateCultureRequest {
+    string culture_id = 1;
+    string editor_id = 2;
+    Culture culture = 3;
+}
+
+// DeleteCultureRequest is request to delete a culture resource
+message DeleteCultureRequest {
+    string culture_id = 1;
+}
+
+// ListTarget is the culture target
+enum ListTarget {
+    ALL = 0;
+    COUNTY = 1;
+    SUB_COUNTY = 2;
+    HOSPITAL = 3;
+    PATIENT = 4;
+    LAB_TECHNICIAN = 5;
+}
+
+// DateFilter is filter option by date
+message DateFilter {
+    int64 start_timestamp_sec = 1;
+    int64 end_timestamp_sec = 2;
+    bool filter = 3;
+}
+
+// ListCultureFilter applies filter criteria to listing cultures
+message ListCultureFilter {
+    DateFilter date_filter = 1;
+    ListTarget list_target = 2;
+    repeated string target_ids = 3;
+}
+
+// ListCulturesRequest is request to retrieve a collection of culture
+message ListCulturesRequest {
+    int32 page_token = 1;
+    int32 page_size = 2;
+    ListCultureFilter filter = 3;   
+}
+
+// Cultures is collection of cultures
+message Cultures {
+    repeated Culture cultures = 1;
+    int32 next_page_token = 2;
+}
+
+// GetCultureRequest is request to retrieve a culture resource
+message GetCultureRequest {
+    string culture_id = 1;
+}
+
+option (grpc.gateway.protoc_gen_swagger.options.openapiv2_swagger) = {
+	info: {
+		title: "Culture Service";
+		version: "1.0";
+		contact: {
+			name: "Culture API - antibug project";
+			url: "https://github.com/gidyon/antibug";
+			email: "gideonhacer@gmail.com";
+        };
+        license: {
+			name: "BSD 3-Clause License";
+			url: "https://github.com/gidyon/antibug/blob/master/LICENSE.txt";
+		};
+    };
+    schemes: HTTP;
+	schemes: HTTPS;
+	schemes: WSS;
+    consumes: "application/json";
+    produces: "application/json";
+    responses: {
+		key: "404";
+		value: {
+			description: "Returned when the resource does not exist.";
+			schema: {
+				json_schema: {
+					type: OBJECT;
+				}
+			}
+		}
+	}
+};
+
+// Manage culture resources
+service CultureAPI {
+
+    // Uploads a culture resource to be stored
+    rpc CreateCulture (CreateCultureRequest) returns (CreateCultureResponse) {
+        // CreateCulture maps to HTTP POST method
+        option (google.api.http) = {
+            post: "/api/antibug/cultures/action/add",
+            body: "*"
+        };
+    }
+
+    // Update an existing culture resource on the database
+    rpc UpdateCulture (UpdateCultureRequest) returns (google.protobuf.Empty) {
+        // UpdateCulture maps to HTTP PATCH method.
+        option (google.api.http) = {
+            patch: "/api/antibug/cultures/{culture_id}",
+            body: "*"
+        };
+    }
+
+    // Removes a culture resource on the database completely
+    rpc DeleteCulture (DeleteCultureRequest) returns (google.protobuf.Empty) {
+        // DeleteCulture maps to HTTP DELETE method.
+        option (google.api.http) = {
+            delete: "/api/antibug/cultures/{culture_id}",
+        };
+    }
+
+    // Retrieves a collection of culture resource
+    rpc ListCultures (ListCulturesRequest) returns (Cultures) {
+        // ListCultures maps to HTTP GET method.
+        option (google.api.http) = {
+            get: "/api/antibug/cultures/action/list"
+        };
+    }
+
+    // Retrieves a culture resource from the database
+    rpc GetCulture (GetCultureRequest) returns (Culture) {
+        // GetCulture maps to HTTP GET method
+        option (google.api.http) = {
+            get: "/api/antibug/cultures/{culture_id}"
+        };
+    }
+}
