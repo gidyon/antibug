@@ -1,0 +1,195 @@
+syntax = "proto3";
+
+package antibug.pathogen;
+
+option go_package="pathogen";
+
+import "google/api/annotations.proto";
+import "google/protobuf/empty.proto";
+import "protoc-gen-swagger/options/annotations.proto";
+
+// RepeatedString is repeated filed values
+message RepeatedString {
+    repeated string values = 1;
+}
+
+// Pathogen is bacterium, virus, or other micro-organism that can cause disease.
+message Pathogen {
+    int64 pathogen_id = 1;
+    string pathogen_name = 2;
+    string general_information = 3;
+    string category = 4;
+    RepeatedString epidemology = 5;
+    RepeatedString symptoms = 6;
+    RepeatedString additional_info = 7;
+    Susceptibilities general_susceptibilities = 8;
+    int64 update_time_sec = 9;
+    RepeatedString editors = 10;
+}
+
+// PathogenView is the different views of the pathogen resource
+enum PathogenView {
+    // Full information about the pathogen resource
+    FULL = 0;
+    // Server response include pathogen_name, pathogen_id, and general_information
+    LIST = 1;
+}
+
+// Susceptibility contains antibiotics susceptibility information against the pathogen
+message Susceptibility {
+    // Resistance Label
+    string title = 1;
+    // Antibiotics effective
+    repeated string antibiotics = 2;
+}
+
+// Susceptibilities contains susceptibility information for a pathogen
+message Susceptibilities {    
+    repeated Susceptibility susceptibilities = 1;
+}
+
+// CreatePathogenRequest is request to create a new pathogen
+message CreatePathogenRequest {
+    // Pathogen resource
+    Pathogen pathogen = 1;
+}
+
+// CreatePathogenResponse is response to CreatePathogen containing the id of the newly created pathogen
+message CreatePathogenResponse {
+    string pathogen_id = 1;
+}
+
+// UpdatePathogenRequest is request to update a pathogen
+message UpdatePathogenRequest {
+    string pathogen_id = 1;
+    Pathogen pathogen = 2;
+}
+
+// DeletePathogenRequest is request to remove a pathogen from database.
+message DeletePathogenRequest {
+    string pathogen_id = 1;
+}
+
+// ListPathogensRequest is request to retrieve a collection of pathogens
+message ListPathogensRequest {
+    PathogenView view = 1;
+    int32 page_token = 2;
+    int32 page_size = 3;
+}
+
+// Pathogens is response containing a collection of pathogens from ListPathogensRequest call
+message Pathogens {
+    repeated Pathogen pathogens = 1;
+    int32 next_page_token = 2;
+}
+
+// SearchPathogensRequest is request to search for a pathogen
+message SearchPathogensRequest { 
+    string query = 1;
+    int32 page_token = 2;
+    int32 page_size = 3;
+    PathogenView view = 4;
+}
+
+// GetPathogenRequest is request to retrieve a single pathogen from the datastore
+message GetPathogenRequest {
+    string pathogen_id = 1;
+    PathogenView view = 2;
+}
+
+option (grpc.gateway.protoc_gen_swagger.options.openapiv2_swagger) = {
+	info: {
+		title: "Pathogen service";
+		version: "1.0";
+		contact: {
+			name: "Pathogen service - antibug project";
+			url: "https://github.com/gidyon/antibug";
+			email: "gideonhacer@gmail.com";
+        };
+        license: {
+			name: "BSD 3-Clause License";
+			url: "https://github.com/gidyon/antibug/blob/master/LICENSE.txt";
+		};
+    };
+    schemes: HTTP;
+	schemes: HTTPS;
+	schemes: WSS;
+    consumes: "application/json";
+    produces: "application/json";
+    responses: {
+		key: "404";
+		value: {
+			description: "Returned when the resource does not exist.";
+			schema: {
+				json_schema: {
+					type: OBJECT;
+				}
+			}
+		}
+	}
+};
+
+// Manages pathogens in the datastore
+service PathogenAPI {
+
+    // Creates a new Pathogen resource
+    rpc CreatePathogen (CreatePathogenRequest) returns (CreatePathogenResponse) {
+        // admin_creds and pathogen resource are mapped in the body of request
+        option (google.api.http) = {
+            post: "/api/antibug/pathogens/create",
+            body: "*",
+            additional_bindings: [
+                {
+                    post: "/api/antibug/pathogens/add"
+                    body: "*"
+                }
+            ]
+        };
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            description: "Creates a pathogen resource",
+            external_docs: {
+                url: "https://github.com/gidyon/antibug";
+                description: "Source repo"
+            }
+        };
+    }
+
+    // Updates an existing Pathogen resource
+    rpc UpdatePathogen (UpdatePathogenRequest) returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+            patch: "/api/antibug/pathogens/{pathogen_id}",
+            body: "*"
+        };
+    }
+
+    // Removes an existing Pathogen resource
+    rpc DeletePathogen (DeletePathogenRequest) returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+            delete: "/api/antibug/pathogens/{pathogen_id}",
+        };
+    }
+
+    // Retrieves a collection of Pathogen resource on the server
+    rpc ListPathogens (ListPathogensRequest) returns (Pathogens) {
+        option (google.api.http) = {
+            get: "/api/antibug/pathogens/action/list"
+        };
+    }
+
+    // Searches for Pathogen and returns a list of possible results
+    rpc SearchPathogens (SearchPathogensRequest) returns (Pathogens) {
+        option (google.api.http) = {
+            get: "/api/antibug/pathogens/action/search",
+        };
+    }
+
+    // Retrives a single pathogen resource
+    rpc GetPathogen (GetPathogenRequest) returns (Pathogen) {
+        // pathogen_id is mapped into URL path parameters
+        // view is mapped into URL query parameters
+        option (google.api.http) = {
+            get: "/api/antibug/pathogens/{pathogen_id}",
+        };
+    }
+    
+}
