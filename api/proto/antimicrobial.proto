@@ -1,0 +1,202 @@
+syntax = "proto3";
+
+package antibug.antimicrobial;
+
+option go_package="antimicrobial";
+
+import "google/api/annotations.proto";
+import "google/protobuf/empty.proto";
+import "protoc-gen-swagger/options/annotations.proto";
+
+
+// Antimicrobial is a biological compound that acts against a microbe
+message Antimicrobial {
+    int64 antimicrobial_id = 1;
+    string antimicrobial_name = 2;
+    string c_diff = 3;
+    string oral_bioavailability = 4;
+    string approximate_cost = 5;
+
+    RepeatedString general_usage = 6;
+    RepeatedString drug_monitoring = 7;
+    RepeatedString adverse_effects = 8;
+    RepeatedString major_interactions = 9;
+
+    Pharmacology pharmacology = 10;
+    RepeatedString additional_information = 11;
+    SpectrumOfActivity activity_spectrum = 12;
+    RepeatedString editors = 13;
+    int64 update_time_sec = 14;
+}
+
+// RepeatedString contains repeated string
+message RepeatedString {
+    repeated string values = 1;
+}
+
+// PharmacologyInfo contains key value pharmacological information
+message PharmacologyInfo {
+    string key = 1;
+    string value = 2;
+}
+
+// Pharmacology contains pharmacological information for an antimicrobial
+message Pharmacology {
+    repeated PharmacologyInfo pharmacology_infos = 1;
+}
+
+// MicrobesInfo is basic name and id for a pathogen
+message MicrobesInfo {
+    string name = 1;
+    string id = 2;
+}
+
+// Spectrum is single spectrum of activity
+message Spectrum {
+    string group = 1;
+    repeated MicrobesInfo microbes = 2;
+}
+
+// SpectrumOfActivity shows the action of the antimicrobial against categories of microbes
+message SpectrumOfActivity {
+    repeated Spectrum spectrum = 1; 
+}
+
+// Request to create a new antimicrobial agent
+message CreateAntimicrobialRequest {
+    // Antimicrobial resource
+    Antimicrobial antimicrobial = 1;
+}
+
+// Response to creating antimicrobial containing the id of the newly created antimicrobial
+message CreateAntimicrobialResponse {
+    string antimicrobial_id = 1;
+}
+
+// Request to update an antimicrobial agent
+message UpdateAntimicrobialRequest {
+    string antimicrobial_id = 1;    
+    Antimicrobial antimicrobial = 2;
+}
+
+// Request to delete an antimicrobial agent
+message DeleteAntimicrobialRequest {
+    string antimicrobial_id = 1;
+}
+
+// View of an antimicrobial resource
+enum AntimicrobialView {
+    // Full information about the resource
+    FULL = 0;
+    // Server response include antimicrobial_id, antimicrobial_name and general_usage
+    LIST = 1;
+}
+
+// Request to retrieve a collection antimicrobial agents
+message ListAntimicrobialsRequest {
+    AntimicrobialView view = 1;
+    int32 page_token = 2;
+    int32 page_size = 3;
+}
+
+// Request to search for an Antimicrobial
+message SearchAntimicrobialsRequest {
+    AntimicrobialView view = 1;
+    string query = 2;
+    bool filter = 3;
+    int32 page_token = 4;
+    int32 page_size = 5;
+}
+
+// Antimicrobials contains a collection of antimicrobials
+message Antimicrobials {
+    repeated Antimicrobial antimicrobials = 1;
+    int32 next_page_token = 2;
+}
+
+// Request to retrieve a single Antimicrobial agent
+message GetAntimicrobialRequest {
+    string antimicrobial_id = 1;
+    AntimicrobialView view = 2;
+}
+
+option (grpc.gateway.protoc_gen_swagger.options.openapiv2_swagger) = {
+	info: {
+		title: "Antimicrobial service";
+		version: "1.0";
+		contact: {
+			name: "antimicrobial service - antibug project";
+			url: "https://github.com/gidyon/antibug";
+			email: "gideonhacer@gmail.com";
+        };
+        license: {
+			name: "BSD 3-Clause License";
+			url: "https://github.com/gidyon/antibug/blob/master/LICENSE.txt";
+		};
+    };
+    schemes: HTTP;
+	schemes: HTTPS;
+	schemes: WSS;
+    consumes: "application/json";
+    produces: "application/json";
+    responses: {
+		key: "404";
+		value: {
+			description: "Returned when the resource does not exist.";
+			schema: {
+				json_schema: {
+					type: OBJECT;
+				}
+			}
+		}
+	}
+};
+
+// Manages antimicrobial agents data
+service AntimicrobialAPI {
+
+    // Creates a new Antimicrobial resource
+    rpc CreateAntimicrobial(CreateAntimicrobialRequest) returns (CreateAntimicrobialResponse) {
+        option (google.api.http) = {
+            post: "/api/antibug/antimicrobials/action/create",
+            body: "*"
+        };
+    }
+
+    // Updates an existing Antimicrobial resource
+    rpc UpdateAntimicrobial(UpdateAntimicrobialRequest) returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+            patch: "/api/antibug/antimicrobials/{antimicrobial_id}",
+            body: "*"
+        };
+    }
+
+    // Removes an existing Antimicrobial resource
+    rpc DeleteAntimicrobial(DeleteAntimicrobialRequest) returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+            delete: "/api/antibug/antimicrobials/{antimicrobial_id}",
+        };
+    }
+
+    // Retrieves a collection of Antimicrobial resource on the server
+    rpc ListAntimicrobials(ListAntimicrobialsRequest) returns (Antimicrobials) {
+        option (google.api.http) = {
+            get: "/api/antibug/antimicrobials/action/list",
+        };
+    }
+
+    // Retrieves a single Antimicrobial resource
+    rpc GetAntimicrobial(GetAntimicrobialRequest) returns (Antimicrobial) {
+        option (google.api.http) = {
+            get: "/api/antibug/antimicrobials/{antimicrobial_id}",
+        };
+    }
+
+    // Searches for Antimicrobial and returns a list of possible results
+    rpc SearchAntimicrobials(SearchAntimicrobialsRequest) returns (Antimicrobials) {
+        option (google.api.http) = {
+            get: "/api/antibug/antimicrobials/action/search",
+        };
+    }
+    
+}
