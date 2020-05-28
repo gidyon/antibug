@@ -1,0 +1,241 @@
+syntax = "proto3";
+
+package antibug.account;
+
+option go_package="account";
+
+import "google/api/annotations.proto";
+import "google/protobuf/empty.proto";
+import "protoc-gen-swagger/options/annotations.proto";
+
+// Account represents user
+message Account {
+    string first_name = 1;
+    string last_name = 2;
+    string email = 3;
+    string phone = 4;
+    string profile_url = 5;
+    string gender = 6;
+    string group = 7;
+    string device_token = 8;
+    bool active = 9;
+}
+
+// Job is an occupation
+message Job {
+    string facility_name = 1;
+    string facility_id = 2;
+    string role = 3;
+    string job_id = 4;
+    string description = 5;
+}
+
+// Jobs is collection of Jobs
+message Jobs {
+    repeated Job jobs = 1;
+}
+
+// Facility is a facility
+message Facility {
+    string facility_name = 1;
+    string facility_id = 2;
+}
+
+// StarredFacilities is health facilities where the user works or collaborates with or has starred
+message StarredFacilities {
+    repeated Facility facilities = 1;
+}
+
+// Settings is user account settings
+message Settings {
+    map <string, bool> settings = 1;
+}
+
+// LoginRequest is request to login
+message LoginRequest {
+    string username = 1;
+    string password = 2;
+}
+
+// LoginResponse is response after login
+message LoginResponse {
+    string token = 1;
+    string account_id = 2;
+    bool account_state = 3;
+    string account_group = 5;
+}
+
+// CreateAccountRequest is request tp create an account
+message CreateAccountRequest  {
+    Account account = 1;
+    string password = 2;
+    string confirm_password = 3;
+}
+
+// CreateAccountResponse contains account id
+message CreateAccountResponse {
+    string account_id = 1;
+}
+
+// ActivateAccountRequest is request to activate the account
+message ActivateAccountRequest {
+    string account_id = 1;
+    bool by_admin = 2;
+}
+
+// UpdateAccountRequest updates a user account
+message UpdateAccountRequest {
+    string account_id = 1;
+    Account account = 2;
+}
+
+// DeleteAccountRequest is request to delete account
+message DeleteAccountRequest {
+    string account_id = 1;
+}
+
+// GetRequest is request to retrieve Jobs, Settings or StarredFacility
+message GetRequest {
+    string account_id = 1;
+}
+
+// UpdateSettingsRequest is request to update user settings
+message UpdateSettingsRequest {
+    string account_id = 1;
+    Settings settings = 2;
+}
+
+// UpdateJobsRequest is request to update users jobs
+message UpdateJobsRequest {
+    string account_id = 1;
+    repeated Job jobs = 2;
+}
+
+// UpdateStarredFacilitiesRequest is request to update starred facility
+message UpdateStarredFacilitiesRequest {
+    string account_id = 1;
+    repeated Facility facilities = 2;
+}
+
+// Manages accounts
+service AccountAPI {
+
+    // Logins a user
+    rpc Login (LoginRequest) returns (LoginResponse) {
+        option (google.api.http) = {
+            post: "/api/antibug/accounts/action/login"
+            body: "*"
+        };
+    };
+
+    // Creates account for user
+    rpc CreateAccount (CreateAccountRequest) returns (CreateAccountResponse) {
+        option (google.api.http) = {
+            post: "/api/antibug/accounts/action/create"
+            body: "*"
+        };
+    };
+
+    // Activates a user account
+    rpc ActivateAccount (ActivateAccountRequest) returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+            post: "/api/antibug/accounts/action/activate"
+            body: "*"
+        };
+    };
+
+    // Updates an account
+    rpc UpdateAccount (UpdateAccountRequest) returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+            patch: "/api/antibug/accounts/{account_id}"
+            body: "*"
+        };
+    };
+
+    // Retrieves an account
+    rpc GetAccount (GetRequest) returns (Account) {
+        option (google.api.http) = {
+            get: "/api/antibug/accounts/{account_id}",
+        };
+    }
+
+    // Retrieves a user settings
+    rpc GetSettings (GetRequest) returns (Settings) {
+        option (google.api.http) = {
+            get: "/api/antibug/accounts/{account_id}/settings"
+        };
+    }
+
+    // Updates a user settings
+    rpc UpdateSettings (UpdateSettingsRequest) returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+            put: "/api/antibug/accounts/{account_id}/settings"
+            body: "*"
+        };
+    }
+
+    // Retrieves a user list of jobs
+    rpc GetJobs (GetRequest) returns (Jobs) {
+        option (google.api.http) = {
+            get: "/api/antibug/accounts/{account_id}/jobs"
+        };
+    }
+
+    // Updates a user list of job(s)
+    rpc UpdateJobs (UpdateJobsRequest) returns (google.protobuf.Empty) {
+        // Performs full update
+        option (google.api.http) = {
+            put: "/api/antibug/accounts/{account_id}/jobs"
+            body: "*"
+        };
+    }
+
+    // Retrieves a user list of stared facilities
+    rpc GetStarredFacilities (GetRequest) returns (StarredFacilities) {
+        option (google.api.http) = {
+            get: "/api/antibug/accounts/{account_id}/stared-facilities"
+        };
+    }
+
+    // Updates a user list of stared facilities
+    rpc UpdateStarredFacilities (UpdateStarredFacilitiesRequest) returns (google.protobuf.Empty) {
+        // Performs full update
+        option (google.api.http) = {
+            put: "/api/antibug/accounts/{account_id}/stared-facilities"
+            body: "*"
+        };
+    }
+}
+
+option (grpc.gateway.protoc_gen_swagger.options.openapiv2_swagger) = {
+	info: {
+		title: "Account Service";
+		version: "1.0";
+		contact: {
+			name: "accunts service - antibug project";
+			url: "https://github.com/gidyon/antibug";
+			email: "gideonhacer@gmail.com";
+        };
+        license: {
+			name: "BSD 3-Clause License";
+			url: "https://github.com/gidyon/antibug/blob/master/LICENSE.txt";
+		};
+    };
+    schemes: HTTP;
+	schemes: HTTPS;
+	schemes: WSS;
+    consumes: "application/json";
+    produces: "application/json";
+    responses: {
+		key: "404";
+		value: {
+			description: "Returned when the resource does not exist.";
+			schema: {
+				json_schema: {
+					type: OBJECT;
+				}
+			}
+		}
+	}
+};
+
