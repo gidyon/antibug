@@ -1,0 +1,30 @@
+serviceVersion: v1/beta
+serviceName: antibug_pathogen
+servicePort: 7070
+logging:
+  level: 1
+  timeFormat: 2006-01-02T15:04:05Z07:00
+  disabled: true
+security:
+  tlsCert: /home/gideon/go/src/github.com/gidyon/antibug/certs/localhost/cert.pem
+  tlsKey: /home/gideon/go/src/github.com/gidyon/antibug/certs/localhost/key.pem
+  serverName: localhost
+  # insecure: true
+databases:
+  sqlDatabase:
+    required: true
+    address: localhost:3306
+    host: localhost
+    port: 3306
+    user: root
+    password: hakty11
+    schema: antibug
+    metadata:
+      name: mysql
+      dialect: mysql
+      orm: gorm
+  redisDatabase:
+    required: false
+    address: localhost:6379
+    host: localhost
+    port: 3306
