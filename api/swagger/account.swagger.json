@@ -1,0 +1,639 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Account Service",
+    "version": "1.0",
+    "contact": {
+      "name": "accunts service - antibug project",
+      "url": "https://github.com/gidyon/antibug",
+      "email": "gideonhacer@gmail.com"
+    },
+    "license": {
+      "name": "BSD 3-Clause License",
+      "url": "https://github.com/gidyon/antibug/blob/master/LICENSE.txt"
+    }
+  },
+  "schemes": [
+    "http",
+    "https",
+    "wss"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/api/antibug/accounts/action/activate": {
+      "post": {
+        "summary": "Activates a user account",
+        "operationId": "ActivateAccount",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "properties": {}
+            }
+          },
+          "404": {
+            "description": "Returned when the resource does not exist.",
+            "schema": {
+              "type": "object",
+              "format": "object"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/accountActivateAccountRequest"
+            }
+          }
+        ],
+        "tags": [
+          "AccountAPI"
+        ]
+      }
+    },
+    "/api/antibug/accounts/action/create": {
+      "post": {
+        "summary": "Creates account for user",
+        "operationId": "CreateAccount",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/accountCreateAccountResponse"
+            }
+          },
+          "404": {
+            "description": "Returned when the resource does not exist.",
+            "schema": {
+              "type": "object",
+              "format": "object"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/accountCreateAccountRequest"
+            }
+          }
+        ],
+        "tags": [
+          "AccountAPI"
+        ]
+      }
+    },
+    "/api/antibug/accounts/action/login": {
+      "post": {
+        "summary": "Logins a user",
+        "operationId": "Login",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/accountLoginResponse"
+            }
+          },
+          "404": {
+            "description": "Returned when the resource does not exist.",
+            "schema": {
+              "type": "object",
+              "format": "object"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/accountLoginRequest"
+            }
+          }
+        ],
+        "tags": [
+          "AccountAPI"
+        ]
+      }
+    },
+    "/api/antibug/accounts/{account_id}": {
+      "get": {
+        "summary": "Retrieves an account",
+        "operationId": "GetAccount",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/accountAccount"
+            }
+          },
+          "404": {
+            "description": "Returned when the resource does not exist.",
+            "schema": {
+              "type": "object",
+              "format": "object"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "account_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "AccountAPI"
+        ]
+      },
+      "patch": {
+        "summary": "Updates an account",
+        "operationId": "UpdateAccount",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "properties": {}
+            }
+          },
+          "404": {
+            "description": "Returned when the resource does not exist.",
+            "schema": {
+              "type": "object",
+              "format": "object"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "account_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/accountUpdateAccountRequest"
+            }
+          }
+        ],
+        "tags": [
+          "AccountAPI"
+        ]
+      }
+    },
+    "/api/antibug/accounts/{account_id}/jobs": {
+      "get": {
+        "summary": "Retrieves a user list of jobs",
+        "operationId": "GetJobs",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/accountJobs"
+            }
+          },
+          "404": {
+            "description": "Returned when the resource does not exist.",
+            "schema": {
+              "type": "object",
+              "format": "object"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "account_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "AccountAPI"
+        ]
+      },
+      "put": {
+        "summary": "Updates a user list of job(s)",
+        "operationId": "UpdateJobs",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "properties": {}
+            }
+          },
+          "404": {
+            "description": "Returned when the resource does not exist.",
+            "schema": {
+              "type": "object",
+              "format": "object"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "account_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/accountUpdateJobsRequest"
+            }
+          }
+        ],
+        "tags": [
+          "AccountAPI"
+        ]
+      }
+    },
+    "/api/antibug/accounts/{account_id}/settings": {
+      "get": {
+        "summary": "Retrieves a user settings",
+        "operationId": "GetSettings",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/accountSettings"
+            }
+          },
+          "404": {
+            "description": "Returned when the resource does not exist.",
+            "schema": {
+              "type": "object",
+              "format": "object"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "account_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "AccountAPI"
+        ]
+      },
+      "put": {
+        "summary": "Updates a user settings",
+        "operationId": "UpdateSettings",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "properties": {}
+            }
+          },
+          "404": {
+            "description": "Returned when the resource does not exist.",
+            "schema": {
+              "type": "object",
+              "format": "object"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "account_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/accountUpdateSettingsRequest"
+            }
+          }
+        ],
+        "tags": [
+          "AccountAPI"
+        ]
+      }
+    },
+    "/api/antibug/accounts/{account_id}/stared-facilities": {
+      "get": {
+        "summary": "Retrieves a user list of stared facilities",
+        "operationId": "GetStarredFacilities",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/accountStarredFacilities"
+            }
+          },
+          "404": {
+            "description": "Returned when the resource does not exist.",
+            "schema": {
+              "type": "object",
+              "format": "object"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "account_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "AccountAPI"
+        ]
+      },
+      "put": {
+        "summary": "Updates a user list of stared facilities",
+        "operationId": "UpdateStarredFacilities",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "properties": {}
+            }
+          },
+          "404": {
+            "description": "Returned when the resource does not exist.",
+            "schema": {
+              "type": "object",
+              "format": "object"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "account_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/accountUpdateStarredFacilitiesRequest"
+            }
+          }
+        ],
+        "tags": [
+          "AccountAPI"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "accountAccount": {
+      "type": "object",
+      "properties": {
+        "first_name": {
+          "type": "string"
+        },
+        "last_name": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "phone": {
+          "type": "string"
+        },
+        "profile_url": {
+          "type": "string"
+        },
+        "gender": {
+          "type": "string"
+        },
+        "group": {
+          "type": "string"
+        },
+        "device_token": {
+          "type": "string"
+        },
+        "active": {
+          "type": "boolean",
+          "format": "boolean"
+        }
+      },
+      "title": "Account represents user"
+    },
+    "accountActivateAccountRequest": {
+      "type": "object",
+      "properties": {
+        "account_id": {
+          "type": "string"
+        },
+        "by_admin": {
+          "type": "boolean",
+          "format": "boolean"
+        }
+      },
+      "title": "ActivateAccountRequest is request to activate the account"
+    },
+    "accountCreateAccountRequest": {
+      "type": "object",
+      "properties": {
+        "account": {
+          "$ref": "#/definitions/accountAccount"
+        },
+        "password": {
+          "type": "string"
+        },
+        "confirm_password": {
+          "type": "string"
+        }
+      },
+      "title": "CreateAccountRequest is request tp create an account"
+    },
+    "accountCreateAccountResponse": {
+      "type": "object",
+      "properties": {
+        "account_id": {
+          "type": "string"
+        }
+      },
+      "title": "CreateAccountResponse contains account id"
+    },
+    "accountFacility": {
+      "type": "object",
+      "properties": {
+        "facility_name": {
+          "type": "string"
+        },
+        "facility_id": {
+          "type": "string"
+        }
+      },
+      "title": "Facility is a facility"
+    },
+    "accountJob": {
+      "type": "object",
+      "properties": {
+        "facility_name": {
+          "type": "string"
+        },
+        "facility_id": {
+          "type": "string"
+        },
+        "role": {
+          "type": "string"
+        },
+        "job_id": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        }
+      },
+      "title": "Job is an occupation"
+    },
+    "accountJobs": {
+      "type": "object",
+      "properties": {
+        "jobs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/accountJob"
+          }
+        }
+      },
+      "title": "Jobs is collection of Jobs"
+    },
+    "accountLoginRequest": {
+      "type": "object",
+      "properties": {
+        "username": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        }
+      },
+      "title": "LoginRequest is request to login"
+    },
+    "accountLoginResponse": {
+      "type": "object",
+      "properties": {
+        "token": {
+          "type": "string"
+        },
+        "account_id": {
+          "type": "string"
+        },
+        "account_state": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "account_group": {
+          "type": "string"
+        }
+      },
+      "title": "LoginResponse is response after login"
+    },
+    "accountSettings": {
+      "type": "object",
+      "properties": {
+        "settings": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "boolean",
+            "format": "boolean"
+          }
+        }
+      },
+      "title": "Settings is user account settings"
+    },
+    "accountStarredFacilities": {
+      "type": "object",
+      "properties": {
+        "facilities": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/accountFacility"
+          }
+        }
+      },
+      "title": "StarredFacilities is health facilities where the user works or collaborates with or has starred"
+    },
+    "accountUpdateAccountRequest": {
+      "type": "object",
+      "properties": {
+        "account_id": {
+          "type": "string"
+        },
+        "account": {
+          "$ref": "#/definitions/accountAccount"
+        }
+      },
+      "title": "UpdateAccountRequest updates a user account"
+    },
+    "accountUpdateJobsRequest": {
+      "type": "object",
+      "properties": {
+        "account_id": {
+          "type": "string"
+        },
+        "jobs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/accountJob"
+          }
+        }
+      },
+      "title": "UpdateJobsRequest is request to update users jobs"
+    },
+    "accountUpdateSettingsRequest": {
+      "type": "object",
+      "properties": {
+        "account_id": {
+          "type": "string"
+        },
+        "settings": {
+          "$ref": "#/definitions/accountSettings"
+        }
+      },
+      "title": "UpdateSettingsRequest is request to update user settings"
+    },
+    "accountUpdateStarredFacilitiesRequest": {
+      "type": "object",
+      "properties": {
+        "account_id": {
+          "type": "string"
+        },
+        "facilities": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/accountFacility"
+          }
+        }
+      },
+      "title": "UpdateStarredFacilitiesRequest is request to update starred facility"
+    }
+  }
+}

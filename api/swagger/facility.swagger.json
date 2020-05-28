@@ -1,0 +1,372 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Facility Service",
+    "version": "1.0",
+    "contact": {
+      "name": "Facilities service - antibug project",
+      "url": "https://github.com/gidyon/antibug",
+      "email": "gideonhacer@gmail.com"
+    },
+    "license": {
+      "name": "BSD 3-Clause License",
+      "url": "https://github.com/gidyon/antibug/blob/master/LICENSE.txt"
+    }
+  },
+  "schemes": [
+    "http",
+    "https",
+    "wss"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/api/antibug/facilities/action/counties": {
+      "get": {
+        "summary": "Retrieves a collection of counties",
+        "operationId": "ListCounties",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/facilityCounties"
+            }
+          },
+          "404": {
+            "description": "Returned when the resource does not exist.",
+            "schema": {
+              "type": "object",
+              "format": "object"
+            }
+          }
+        },
+        "tags": [
+          "FacilityAPI"
+        ]
+      }
+    },
+    "/api/antibug/facilities/action/list": {
+      "get": {
+        "summary": "Retrieves a list of facilities resource from the database",
+        "operationId": "ListFacilities",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/facilityFacilities"
+            }
+          },
+          "404": {
+            "description": "Returned when the resource does not exist.",
+            "schema": {
+              "type": "object",
+              "format": "object"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "page_token",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "tags": [
+          "FacilityAPI"
+        ]
+      }
+    },
+    "/api/antibug/facilities/action/search": {
+      "get": {
+        "summary": "Searches for facility and returns collection of facilities",
+        "operationId": "SearchFacilities",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/facilityFacilities"
+            }
+          },
+          "404": {
+            "description": "Returned when the resource does not exist.",
+            "schema": {
+              "type": "object",
+              "format": "object"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "page_token",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "tags": [
+          "FacilityAPI"
+        ]
+      }
+    },
+    "/api/antibug/facilities/action/subcounties": {
+      "get": {
+        "summary": "Retrieves a collection of sub counties",
+        "operationId": "ListSubCounties",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/facilitySubCounties"
+            }
+          },
+          "404": {
+            "description": "Returned when the resource does not exist.",
+            "schema": {
+              "type": "object",
+              "format": "object"
+            }
+          }
+        },
+        "tags": [
+          "FacilityAPI"
+        ]
+      }
+    },
+    "/api/antibug/facilities/add": {
+      "post": {
+        "summary": "Adds a facility to a list of facilities in the database",
+        "operationId": "AddFacility",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/facilityAddFacilityResponse"
+            }
+          },
+          "404": {
+            "description": "Returned when the resource does not exist.",
+            "schema": {
+              "type": "object",
+              "format": "object"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/facilityAddFacilityRequest"
+            }
+          }
+        ],
+        "tags": [
+          "FacilityAPI"
+        ]
+      }
+    },
+    "/api/antibug/facilities/{facility_id}": {
+      "get": {
+        "summary": "Retrieves a facility resource from the database",
+        "operationId": "GetFacility",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/facilityFacility"
+            }
+          },
+          "404": {
+            "description": "Returned when the resource does not exist.",
+            "schema": {
+              "type": "object",
+              "format": "object"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "facility_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "FacilityAPI"
+        ]
+      },
+      "delete": {
+        "summary": "Removes a facility in the database",
+        "operationId": "RemoveFacility",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "properties": {}
+            }
+          },
+          "404": {
+            "description": "Returned when the resource does not exist.",
+            "schema": {
+              "type": "object",
+              "format": "object"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "facility_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "FacilityAPI"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "facilityAddFacilityRequest": {
+      "type": "object",
+      "properties": {
+        "facility": {
+          "$ref": "#/definitions/facilityFacility"
+        }
+      },
+      "title": "AddFacilityRequest is request to add a facility resource to server"
+    },
+    "facilityAddFacilityResponse": {
+      "type": "object",
+      "properties": {
+        "facility_id": {
+          "type": "string"
+        }
+      },
+      "title": "AddFacilityResponse is response to AddFacility call containing the id of the newly created facility resource"
+    },
+    "facilityCounties": {
+      "type": "object",
+      "properties": {
+        "counties": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/facilityCounty"
+          }
+        }
+      },
+      "title": "Counties is a collection of county"
+    },
+    "facilityCounty": {
+      "type": "object",
+      "properties": {
+        "county": {
+          "type": "string"
+        },
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "title": "County or state"
+    },
+    "facilityFacilities": {
+      "type": "object",
+      "properties": {
+        "facilities": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/facilityFacility"
+          }
+        },
+        "next_page_token": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "title": "Facilities is a colection of facility resource"
+    },
+    "facilityFacility": {
+      "type": "object",
+      "properties": {
+        "facility_id": {
+          "type": "string",
+          "format": "int64"
+        },
+        "facility_name": {
+          "type": "string"
+        },
+        "county": {
+          "type": "string"
+        },
+        "county_code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "sub_county": {
+          "type": "string"
+        },
+        "sub_county_code": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "title": "Facility is a place where like hospital or learning institution"
+    },
+    "facilitySubCounties": {
+      "type": "object",
+      "properties": {
+        "sub_counties": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/facilitySubCounty"
+          }
+        }
+      },
+      "title": "SubCounties is a collection of sub-counties resource"
+    },
+    "facilitySubCounty": {
+      "type": "object",
+      "properties": {
+        "sub_county": {
+          "type": "string"
+        },
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "title": "SubCounty is an area within a county"
+    }
+  }
+}

@@ -1,0 +1,476 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Antimicrobial service",
+    "version": "1.0",
+    "contact": {
+      "name": "antimicrobial service - antibug project",
+      "url": "https://github.com/gidyon/antibug",
+      "email": "gideonhacer@gmail.com"
+    },
+    "license": {
+      "name": "BSD 3-Clause License",
+      "url": "https://github.com/gidyon/antibug/blob/master/LICENSE.txt"
+    }
+  },
+  "schemes": [
+    "http",
+    "https",
+    "wss"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/api/antibug/antimicrobials/action/create": {
+      "post": {
+        "summary": "Creates a new Antimicrobial resource",
+        "operationId": "CreateAntimicrobial",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/antimicrobialCreateAntimicrobialResponse"
+            }
+          },
+          "404": {
+            "description": "Returned when the resource does not exist.",
+            "schema": {
+              "type": "object",
+              "format": "object"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/antimicrobialCreateAntimicrobialRequest"
+            }
+          }
+        ],
+        "tags": [
+          "AntimicrobialAPI"
+        ]
+      }
+    },
+    "/api/antibug/antimicrobials/action/list": {
+      "get": {
+        "summary": "Retrieves a collection of Antimicrobial resource on the server",
+        "operationId": "ListAntimicrobials",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/antimicrobialAntimicrobials"
+            }
+          },
+          "404": {
+            "description": "Returned when the resource does not exist.",
+            "schema": {
+              "type": "object",
+              "format": "object"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "view",
+            "description": " - FULL: Full information about the resource\n - LIST: Server response include antimicrobial_id, antimicrobial_name and general_usage",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "FULL",
+              "LIST"
+            ],
+            "default": "FULL"
+          },
+          {
+            "name": "page_token",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "tags": [
+          "AntimicrobialAPI"
+        ]
+      }
+    },
+    "/api/antibug/antimicrobials/action/search": {
+      "get": {
+        "summary": "Searches for Antimicrobial and returns a list of possible results",
+        "operationId": "SearchAntimicrobials",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/antimicrobialAntimicrobials"
+            }
+          },
+          "404": {
+            "description": "Returned when the resource does not exist.",
+            "schema": {
+              "type": "object",
+              "format": "object"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "view",
+            "description": " - FULL: Full information about the resource\n - LIST: Server response include antimicrobial_id, antimicrobial_name and general_usage",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "FULL",
+              "LIST"
+            ],
+            "default": "FULL"
+          },
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "filter",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          },
+          {
+            "name": "page_token",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "tags": [
+          "AntimicrobialAPI"
+        ]
+      }
+    },
+    "/api/antibug/antimicrobials/{antimicrobial_id}": {
+      "get": {
+        "summary": "Retrieves a single Antimicrobial resource",
+        "operationId": "GetAntimicrobial",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/antimicrobialAntimicrobial"
+            }
+          },
+          "404": {
+            "description": "Returned when the resource does not exist.",
+            "schema": {
+              "type": "object",
+              "format": "object"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "antimicrobial_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "view",
+            "description": " - FULL: Full information about the resource\n - LIST: Server response include antimicrobial_id, antimicrobial_name and general_usage",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "FULL",
+              "LIST"
+            ],
+            "default": "FULL"
+          }
+        ],
+        "tags": [
+          "AntimicrobialAPI"
+        ]
+      },
+      "delete": {
+        "summary": "Removes an existing Antimicrobial resource",
+        "operationId": "DeleteAntimicrobial",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "properties": {}
+            }
+          },
+          "404": {
+            "description": "Returned when the resource does not exist.",
+            "schema": {
+              "type": "object",
+              "format": "object"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "antimicrobial_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "AntimicrobialAPI"
+        ]
+      },
+      "patch": {
+        "summary": "Updates an existing Antimicrobial resource",
+        "operationId": "UpdateAntimicrobial",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "properties": {}
+            }
+          },
+          "404": {
+            "description": "Returned when the resource does not exist.",
+            "schema": {
+              "type": "object",
+              "format": "object"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "antimicrobial_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/antimicrobialUpdateAntimicrobialRequest"
+            }
+          }
+        ],
+        "tags": [
+          "AntimicrobialAPI"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "antimicrobialAntimicrobial": {
+      "type": "object",
+      "properties": {
+        "antimicrobial_id": {
+          "type": "string",
+          "format": "int64"
+        },
+        "antimicrobial_name": {
+          "type": "string"
+        },
+        "c_diff": {
+          "type": "string"
+        },
+        "oral_bioavailability": {
+          "type": "string"
+        },
+        "approximate_cost": {
+          "type": "string"
+        },
+        "general_usage": {
+          "$ref": "#/definitions/antimicrobialRepeatedString"
+        },
+        "drug_monitoring": {
+          "$ref": "#/definitions/antimicrobialRepeatedString"
+        },
+        "adverse_effects": {
+          "$ref": "#/definitions/antimicrobialRepeatedString"
+        },
+        "major_interactions": {
+          "$ref": "#/definitions/antimicrobialRepeatedString"
+        },
+        "pharmacology": {
+          "$ref": "#/definitions/antimicrobialPharmacology"
+        },
+        "additional_information": {
+          "$ref": "#/definitions/antimicrobialRepeatedString"
+        },
+        "activity_spectrum": {
+          "$ref": "#/definitions/antimicrobialSpectrumOfActivity"
+        },
+        "editors": {
+          "$ref": "#/definitions/antimicrobialRepeatedString"
+        },
+        "update_time_sec": {
+          "type": "string",
+          "format": "int64"
+        }
+      },
+      "title": "Antimicrobial is a biological compound that acts against a microbe"
+    },
+    "antimicrobialAntimicrobialView": {
+      "type": "string",
+      "enum": [
+        "FULL",
+        "LIST"
+      ],
+      "default": "FULL",
+      "description": "- FULL: Full information about the resource\n - LIST: Server response include antimicrobial_id, antimicrobial_name and general_usage",
+      "title": "View of an antimicrobial resource"
+    },
+    "antimicrobialAntimicrobials": {
+      "type": "object",
+      "properties": {
+        "antimicrobials": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/antimicrobialAntimicrobial"
+          }
+        },
+        "next_page_token": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "title": "Antimicrobials contains a collection of antimicrobials"
+    },
+    "antimicrobialCreateAntimicrobialRequest": {
+      "type": "object",
+      "properties": {
+        "antimicrobial": {
+          "$ref": "#/definitions/antimicrobialAntimicrobial",
+          "title": "Antimicrobial resource"
+        }
+      },
+      "title": "Request to create a new antimicrobial agent"
+    },
+    "antimicrobialCreateAntimicrobialResponse": {
+      "type": "object",
+      "properties": {
+        "antimicrobial_id": {
+          "type": "string"
+        }
+      },
+      "title": "Response to creating antimicrobial containing the id of the newly created antimicrobial"
+    },
+    "antimicrobialMicrobesInfo": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        }
+      },
+      "title": "MicrobesInfo is basic name and id for a pathogen"
+    },
+    "antimicrobialPharmacology": {
+      "type": "object",
+      "properties": {
+        "pharmacology_infos": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/antimicrobialPharmacologyInfo"
+          }
+        }
+      },
+      "title": "Pharmacology contains pharmacological information for an antimicrobial"
+    },
+    "antimicrobialPharmacologyInfo": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "title": "PharmacologyInfo contains key value pharmacological information"
+    },
+    "antimicrobialRepeatedString": {
+      "type": "object",
+      "properties": {
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "title": "RepeatedString contains repeated string"
+    },
+    "antimicrobialSpectrum": {
+      "type": "object",
+      "properties": {
+        "group": {
+          "type": "string"
+        },
+        "microbes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/antimicrobialMicrobesInfo"
+          }
+        }
+      },
+      "title": "Spectrum is single spectrum of activity"
+    },
+    "antimicrobialSpectrumOfActivity": {
+      "type": "object",
+      "properties": {
+        "spectrum": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/antimicrobialSpectrum"
+          }
+        }
+      },
+      "title": "SpectrumOfActivity shows the action of the antimicrobial against categories of microbes"
+    },
+    "antimicrobialUpdateAntimicrobialRequest": {
+      "type": "object",
+      "properties": {
+        "antimicrobial_id": {
+          "type": "string"
+        },
+        "antimicrobial": {
+          "$ref": "#/definitions/antimicrobialAntimicrobial"
+        }
+      },
+      "title": "Request to update an antimicrobial agent"
+    }
+  }
+}

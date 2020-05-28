@@ -1,0 +1,467 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Pathogen service",
+    "version": "1.0",
+    "contact": {
+      "name": "Pathogen service - antibug project",
+      "url": "https://github.com/gidyon/antibug",
+      "email": "gideonhacer@gmail.com"
+    },
+    "license": {
+      "name": "BSD 3-Clause License",
+      "url": "https://github.com/gidyon/antibug/blob/master/LICENSE.txt"
+    }
+  },
+  "schemes": [
+    "http",
+    "https",
+    "wss"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/api/antibug/pathogens/action/list": {
+      "get": {
+        "summary": "Retrieves a collection of Pathogen resource on the server",
+        "operationId": "ListPathogens",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/pathogenPathogens"
+            }
+          },
+          "404": {
+            "description": "Returned when the resource does not exist.",
+            "schema": {
+              "type": "object",
+              "format": "object"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "view",
+            "description": " - FULL: Full information about the pathogen resource\n - LIST: Server response include pathogen_name, pathogen_id, and general_information",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "FULL",
+              "LIST"
+            ],
+            "default": "FULL"
+          },
+          {
+            "name": "page_token",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "tags": [
+          "PathogenAPI"
+        ]
+      }
+    },
+    "/api/antibug/pathogens/action/search": {
+      "get": {
+        "summary": "Searches for Pathogen and returns a list of possible results",
+        "operationId": "SearchPathogens",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/pathogenPathogens"
+            }
+          },
+          "404": {
+            "description": "Returned when the resource does not exist.",
+            "schema": {
+              "type": "object",
+              "format": "object"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "page_token",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "view",
+            "description": " - FULL: Full information about the pathogen resource\n - LIST: Server response include pathogen_name, pathogen_id, and general_information",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "FULL",
+              "LIST"
+            ],
+            "default": "FULL"
+          }
+        ],
+        "tags": [
+          "PathogenAPI"
+        ]
+      }
+    },
+    "/api/antibug/pathogens/add": {
+      "post": {
+        "summary": "Creates a new Pathogen resource",
+        "description": "Creates a pathogen resource",
+        "operationId": "CreatePathogen2",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/pathogenCreatePathogenResponse"
+            }
+          },
+          "404": {
+            "description": "Returned when the resource does not exist.",
+            "schema": {
+              "type": "object",
+              "format": "object"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/pathogenCreatePathogenRequest"
+            }
+          }
+        ],
+        "tags": [
+          "PathogenAPI"
+        ],
+        "externalDocs": {
+          "description": "Source repo",
+          "url": "https://github.com/gidyon/antibug"
+        }
+      }
+    },
+    "/api/antibug/pathogens/create": {
+      "post": {
+        "summary": "Creates a new Pathogen resource",
+        "description": "Creates a pathogen resource",
+        "operationId": "CreatePathogen",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/pathogenCreatePathogenResponse"
+            }
+          },
+          "404": {
+            "description": "Returned when the resource does not exist.",
+            "schema": {
+              "type": "object",
+              "format": "object"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/pathogenCreatePathogenRequest"
+            }
+          }
+        ],
+        "tags": [
+          "PathogenAPI"
+        ],
+        "externalDocs": {
+          "description": "Source repo",
+          "url": "https://github.com/gidyon/antibug"
+        }
+      }
+    },
+    "/api/antibug/pathogens/{pathogen_id}": {
+      "get": {
+        "summary": "Retrives a single pathogen resource",
+        "operationId": "GetPathogen",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/pathogenPathogen"
+            }
+          },
+          "404": {
+            "description": "Returned when the resource does not exist.",
+            "schema": {
+              "type": "object",
+              "format": "object"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "pathogen_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "view",
+            "description": " - FULL: Full information about the pathogen resource\n - LIST: Server response include pathogen_name, pathogen_id, and general_information",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "FULL",
+              "LIST"
+            ],
+            "default": "FULL"
+          }
+        ],
+        "tags": [
+          "PathogenAPI"
+        ]
+      },
+      "delete": {
+        "summary": "Removes an existing Pathogen resource",
+        "operationId": "DeletePathogen",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "properties": {}
+            }
+          },
+          "404": {
+            "description": "Returned when the resource does not exist.",
+            "schema": {
+              "type": "object",
+              "format": "object"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "pathogen_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "PathogenAPI"
+        ]
+      },
+      "patch": {
+        "summary": "Updates an existing Pathogen resource",
+        "operationId": "UpdatePathogen",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "properties": {}
+            }
+          },
+          "404": {
+            "description": "Returned when the resource does not exist.",
+            "schema": {
+              "type": "object",
+              "format": "object"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "pathogen_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/pathogenUpdatePathogenRequest"
+            }
+          }
+        ],
+        "tags": [
+          "PathogenAPI"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "pathogenCreatePathogenRequest": {
+      "type": "object",
+      "properties": {
+        "pathogen": {
+          "$ref": "#/definitions/pathogenPathogen",
+          "title": "Pathogen resource"
+        }
+      },
+      "title": "CreatePathogenRequest is request to create a new pathogen"
+    },
+    "pathogenCreatePathogenResponse": {
+      "type": "object",
+      "properties": {
+        "pathogen_id": {
+          "type": "string"
+        }
+      },
+      "title": "CreatePathogenResponse is response to CreatePathogen containing the id of the newly created pathogen"
+    },
+    "pathogenPathogen": {
+      "type": "object",
+      "properties": {
+        "pathogen_id": {
+          "type": "string",
+          "format": "int64"
+        },
+        "pathogen_name": {
+          "type": "string"
+        },
+        "general_information": {
+          "type": "string"
+        },
+        "category": {
+          "type": "string"
+        },
+        "epidemology": {
+          "$ref": "#/definitions/pathogenRepeatedString"
+        },
+        "symptoms": {
+          "$ref": "#/definitions/pathogenRepeatedString"
+        },
+        "additional_info": {
+          "$ref": "#/definitions/pathogenRepeatedString"
+        },
+        "general_susceptibilities": {
+          "$ref": "#/definitions/pathogenSusceptibilities"
+        },
+        "update_time_sec": {
+          "type": "string",
+          "format": "int64"
+        },
+        "editors": {
+          "$ref": "#/definitions/pathogenRepeatedString"
+        }
+      },
+      "description": "Pathogen is bacterium, virus, or other micro-organism that can cause disease."
+    },
+    "pathogenPathogenView": {
+      "type": "string",
+      "enum": [
+        "FULL",
+        "LIST"
+      ],
+      "default": "FULL",
+      "description": "- FULL: Full information about the pathogen resource\n - LIST: Server response include pathogen_name, pathogen_id, and general_information",
+      "title": "PathogenView is the different views of the pathogen resource"
+    },
+    "pathogenPathogens": {
+      "type": "object",
+      "properties": {
+        "pathogens": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/pathogenPathogen"
+          }
+        },
+        "next_page_token": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "title": "Pathogens is response containing a collection of pathogens from ListPathogensRequest call"
+    },
+    "pathogenRepeatedString": {
+      "type": "object",
+      "properties": {
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "title": "RepeatedString is repeated filed values"
+    },
+    "pathogenSusceptibilities": {
+      "type": "object",
+      "properties": {
+        "susceptibilities": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/pathogenSusceptibility"
+          }
+        }
+      },
+      "title": "Susceptibilities contains susceptibility information for a pathogen"
+    },
+    "pathogenSusceptibility": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "title": "Resistance Label"
+        },
+        "antibiotics": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "Antibiotics effective"
+        }
+      },
+      "title": "Susceptibility contains antibiotics susceptibility information against the pathogen"
+    },
+    "pathogenUpdatePathogenRequest": {
+      "type": "object",
+      "properties": {
+        "pathogen_id": {
+          "type": "string"
+        },
+        "pathogen": {
+          "$ref": "#/definitions/pathogenPathogen"
+        }
+      },
+      "title": "UpdatePathogenRequest is request to update a pathogen"
+    }
+  }
+}

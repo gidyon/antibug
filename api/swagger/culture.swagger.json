@@ -1,0 +1,464 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Culture Service",
+    "version": "1.0",
+    "contact": {
+      "name": "Culture API - antibug project",
+      "url": "https://github.com/gidyon/antibug",
+      "email": "gideonhacer@gmail.com"
+    },
+    "license": {
+      "name": "BSD 3-Clause License",
+      "url": "https://github.com/gidyon/antibug/blob/master/LICENSE.txt"
+    }
+  },
+  "schemes": [
+    "http",
+    "https",
+    "wss"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/api/antibug/cultures/action/add": {
+      "post": {
+        "summary": "Uploads a culture resource to be stored",
+        "operationId": "CreateCulture",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/cultureCreateCultureResponse"
+            }
+          },
+          "404": {
+            "description": "Returned when the resource does not exist.",
+            "schema": {
+              "type": "object",
+              "format": "object"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/cultureCreateCultureRequest"
+            }
+          }
+        ],
+        "tags": [
+          "CultureAPI"
+        ]
+      }
+    },
+    "/api/antibug/cultures/action/list": {
+      "get": {
+        "summary": "Retrieves a collection of culture resource",
+        "operationId": "ListCultures",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/cultureCultures"
+            }
+          },
+          "404": {
+            "description": "Returned when the resource does not exist.",
+            "schema": {
+              "type": "object",
+              "format": "object"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "page_token",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "filter.date_filter.start_timestamp_sec",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "filter.date_filter.end_timestamp_sec",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "filter.date_filter.filter",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          },
+          {
+            "name": "filter.list_target",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "ALL",
+              "COUNTY",
+              "SUB_COUNTY",
+              "HOSPITAL",
+              "PATIENT",
+              "LAB_TECHNICIAN"
+            ],
+            "default": "ALL"
+          },
+          {
+            "name": "filter.target_ids",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          }
+        ],
+        "tags": [
+          "CultureAPI"
+        ]
+      }
+    },
+    "/api/antibug/cultures/{culture_id}": {
+      "get": {
+        "summary": "Retrieves a culture resource from the database",
+        "operationId": "GetCulture",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/cultureCulture"
+            }
+          },
+          "404": {
+            "description": "Returned when the resource does not exist.",
+            "schema": {
+              "type": "object",
+              "format": "object"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "culture_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "CultureAPI"
+        ]
+      },
+      "delete": {
+        "summary": "Removes a culture resource on the database completely",
+        "operationId": "DeleteCulture",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "properties": {}
+            }
+          },
+          "404": {
+            "description": "Returned when the resource does not exist.",
+            "schema": {
+              "type": "object",
+              "format": "object"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "culture_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "CultureAPI"
+        ]
+      },
+      "patch": {
+        "summary": "Update an existing culture resource on the database",
+        "operationId": "UpdateCulture",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "properties": {}
+            }
+          },
+          "404": {
+            "description": "Returned when the resource does not exist.",
+            "schema": {
+              "type": "object",
+              "format": "object"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "culture_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/cultureUpdateCultureRequest"
+            }
+          }
+        ],
+        "tags": [
+          "CultureAPI"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "antibugcultureLabel": {
+      "type": "string",
+      "enum": [
+        "SUSCEPTIBLE",
+        "DOSE_SUSCEPTIBLE",
+        "INTERMEDIATE",
+        "RESISTANT"
+      ],
+      "default": "SUSCEPTIBLE",
+      "description": "- SUSCEPTIBLE: Antimicrobial was effective\n - DOSE_SUSCEPTIBLE: The antimicrobial was effective but under a given dosage\n - INTERMEDIATE: Not effective in certain concentrations\n - RESISTANT: Not effective at all",
+      "title": "Label is tag/boundary of antimicrobial used for culturing based on its action against the pathogen"
+    },
+    "cultureCreateCultureRequest": {
+      "type": "object",
+      "properties": {
+        "culture": {
+          "$ref": "#/definitions/cultureCulture"
+        }
+      },
+      "title": "CreateCultureRequest is request to add a culture"
+    },
+    "cultureCreateCultureResponse": {
+      "type": "object",
+      "properties": {
+        "culture_id": {
+          "type": "string"
+        }
+      },
+      "title": "CreateCultureResponse is response from CreateCultureRequest call"
+    },
+    "cultureCulture": {
+      "type": "object",
+      "properties": {
+        "culture_id": {
+          "type": "string"
+        },
+        "lab_tech_id": {
+          "type": "string"
+        },
+        "hospital_id": {
+          "type": "string"
+        },
+        "county_code": {
+          "type": "string"
+        },
+        "sub_county_code": {
+          "type": "string"
+        },
+        "patient_id": {
+          "type": "string"
+        },
+        "patient_gender": {
+          "type": "string"
+        },
+        "patient_age": {
+          "type": "string"
+        },
+        "editors": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "test_method": {
+          "$ref": "#/definitions/cultureTestMethod"
+        },
+        "culture_source": {
+          "type": "string"
+        },
+        "pathogens_found": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "antimicrobials_used": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "culture_results": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/cultureLabTestResult"
+          }
+        },
+        "results_timestamp_sec": {
+          "type": "string",
+          "format": "int64"
+        }
+      },
+      "title": "Culture is a lab result after culturing process"
+    },
+    "cultureCultures": {
+      "type": "object",
+      "properties": {
+        "cultures": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/cultureCulture"
+          }
+        },
+        "next_page_token": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "title": "Cultures is collection of cultures"
+    },
+    "cultureDateFilter": {
+      "type": "object",
+      "properties": {
+        "start_timestamp_sec": {
+          "type": "string",
+          "format": "int64"
+        },
+        "end_timestamp_sec": {
+          "type": "string",
+          "format": "int64"
+        },
+        "filter": {
+          "type": "boolean",
+          "format": "boolean"
+        }
+      },
+      "title": "DateFilter is filter option by date"
+    },
+    "cultureLabTestResult": {
+      "type": "object",
+      "properties": {
+        "pathogen_name": {
+          "type": "string"
+        },
+        "pathogen_id": {
+          "type": "string"
+        },
+        "antimicrobial_id": {
+          "type": "string"
+        },
+        "antimicrobial_name": {
+          "type": "string"
+        },
+        "disk_diameter": {
+          "type": "string"
+        },
+        "non_diffusion_result": {
+          "type": "string"
+        },
+        "result_comment": {
+          "type": "string"
+        },
+        "label": {
+          "$ref": "#/definitions/antibugcultureLabel"
+        }
+      },
+      "title": "LabTestResult is a single result obtained after the culturing process"
+    },
+    "cultureListCultureFilter": {
+      "type": "object",
+      "properties": {
+        "date_filter": {
+          "$ref": "#/definitions/cultureDateFilter"
+        },
+        "list_target": {
+          "$ref": "#/definitions/cultureListTarget"
+        },
+        "target_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "title": "ListCultureFilter applies filter criteria to listing cultures"
+    },
+    "cultureListTarget": {
+      "type": "string",
+      "enum": [
+        "ALL",
+        "COUNTY",
+        "SUB_COUNTY",
+        "HOSPITAL",
+        "PATIENT",
+        "LAB_TECHNICIAN"
+      ],
+      "default": "ALL",
+      "title": "ListTarget is the culture target"
+    },
+    "cultureTestMethod": {
+      "type": "string",
+      "enum": [
+        "DISK_DIFFUSION"
+      ],
+      "default": "DISK_DIFFUSION",
+      "description": "- DISK_DIFFUSION: Default test method. Widely used",
+      "title": "TestMethod is method used to conduct the testing"
+    },
+    "cultureUpdateCultureRequest": {
+      "type": "object",
+      "properties": {
+        "culture_id": {
+          "type": "string"
+        },
+        "editor_id": {
+          "type": "string"
+        },
+        "culture": {
+          "$ref": "#/definitions/cultureCulture"
+        }
+      },
+      "title": "UpdateCultureRequest is request to update a culture resource"
+    }
+  }
+}
