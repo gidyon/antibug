@@ -1,0 +1,166 @@
+syntax = "proto3";
+
+package antibug.facility;
+
+option go_package="facility";
+
+import "google/protobuf/empty.proto";
+import "google/api/annotations.proto";
+import "protoc-gen-swagger/options/annotations.proto";
+
+// Facility is a place where like hospital or learning institution
+message Facility {
+    int64 facility_id = 1;
+    string facility_name = 2;
+    string county = 3;
+    int32 county_code = 4;
+    string sub_county = 5;
+    int32 sub_county_code = 6;
+}
+
+// SubCounty is an area within a county
+message SubCounty {
+    string sub_county = 1;
+    int32 code = 2;
+}
+
+// County or state
+message County {
+    string county = 1;
+    int32 code = 3;
+}
+
+// AddFacilityRequest is request to add a facility resource to server
+message AddFacilityRequest {
+    Facility facility = 2;
+}
+
+// AddFacilityResponse is response to AddFacility call containing the id of the newly created facility resource
+message AddFacilityResponse {
+    string facility_id = 1;
+}
+
+// RemoveFacilityRequest is request to remove a facility resource from the server
+message RemoveFacilityRequest {
+    string facility_id = 2;
+}
+
+// GetFacilityRequest is request to retrieve a single facility resource
+message GetFacilityRequest {
+    string facility_id = 1;
+}
+
+// ListFacilitiesRequest is request to retrive a collection of facilitiese resource
+message ListFacilitiesRequest {
+    int32 page_token = 1;
+    int32 page_size = 2;
+}
+
+// SearchFacilitiesRequest is request to search for a facility
+message SearchFacilitiesRequest {
+    string query = 1;
+    int32 page_token = 2;
+    int32 page_size = 3;
+}
+
+// Facilities is a colection of facility resource
+message Facilities {
+    repeated Facility facilities = 1;
+    int32 next_page_token = 2;
+}
+
+// Counties is a collection of county
+message Counties {
+    repeated County counties = 1;
+}
+
+// SubCounties is a collection of sub-counties resource
+message SubCounties {
+    repeated SubCounty sub_counties = 1;
+}
+
+// Manages facilities, counties and sub counties
+service FacilityAPI { 
+
+    // Adds a facility to a list of facilities in the database
+    rpc AddFacility(AddFacilityRequest) returns (AddFacilityResponse) {
+        option (google.api.http) = {
+            post: "/api/antibug/facilities/add",
+            body: "*"
+        };
+    }
+
+    // Removes a facility in the database
+    rpc RemoveFacility(RemoveFacilityRequest) returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+            delete: "/api/antibug/facilities/{facility_id}"
+        };
+    }
+
+    // Retrieves a facility resource from the database
+    rpc GetFacility(GetFacilityRequest) returns (Facility) {
+        option (google.api.http) = {
+            get: "/api/antibug/facilities/{facility_id}"
+        };
+    }
+
+    // Retrieves a list of facilities resource from the database
+    rpc ListFacilities(ListFacilitiesRequest) returns (Facilities) {
+        option (google.api.http) = {
+            get: "/api/antibug/facilities/action/list"
+        };
+    }
+
+    // Searches for facility and returns collection of facilities
+    rpc SearchFacilities(SearchFacilitiesRequest) returns (Facilities) {
+        option (google.api.http) = {
+            get: "/api/antibug/facilities/action/search"
+        };
+    }
+
+    // Retrieves a collection of counties
+    rpc ListCounties(google.protobuf.Empty) returns (Counties) {
+        option (google.api.http) = {
+            get: "/api/antibug/facilities/action/counties"
+        };
+    }
+
+    // Retrieves a collection of sub counties
+    rpc ListSubCounties(google.protobuf.Empty) returns (SubCounties) {
+        option (google.api.http) = {
+            get: "/api/antibug/facilities/action/subcounties"
+        };
+    }
+}
+
+option (grpc.gateway.protoc_gen_swagger.options.openapiv2_swagger) = {
+	info: {
+		title: "Facility Service";
+		version: "1.0";
+		contact: {
+			name: "Facilities service - antibug project";
+			url: "https://github.com/gidyon/antibug";
+			email: "gideonhacer@gmail.com";
+        };
+        license: {
+			name: "BSD 3-Clause License";
+			url: "https://github.com/gidyon/antibug/blob/master/LICENSE.txt";
+		};
+    };
+    schemes: HTTP;
+	schemes: HTTPS;
+	schemes: WSS;
+    consumes: "application/json";
+    produces: "application/json";
+    responses: {
+		key: "404";
+		value: {
+			description: "Returned when the resource does not exist.";
+			schema: {
+				json_schema: {
+					type: OBJECT;
+				}
+			}
+		}
+	}
+};
