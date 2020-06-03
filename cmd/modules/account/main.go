@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"github.com/Pallinder/go-randomdata"
 	"github.com/gidyon/antibug/pkg/api/account"
 	app_grpc_middleware "github.com/gidyon/micros/pkg/grpc/middleware"
 	"github.com/gidyon/micros/utils/healthcheck"
@@ -9,8 +10,8 @@ import (
 
 	account_service "github.com/gidyon/antibug/internal/modules/account"
 
-	"github.com/gidyon/config"
 	"github.com/gidyon/micros"
+	"github.com/gidyon/micros/pkg/config"
 
 	"github.com/Sirupsen/logrus"
 )
@@ -27,17 +28,14 @@ func main() {
 	unaryInterceptors := make([]grpc.UnaryServerInterceptor, 0)
 	streamInterceptors := make([]grpc.StreamServerInterceptor, 0)
 
-	// Unary interceptor for authentication
-	contractAuth := grpc.UnaryServerInterceptor(authInterceptor)
-	unaryInterceptors = append(unaryInterceptors, contractAuth)
-
 	// Recovery middleware
 	recoveryUIs, recoverySIs := app_grpc_middleware.AddRecovery()
 	unaryInterceptors = append(unaryInterceptors, recoveryUIs...)
 	streamInterceptors = append(streamInterceptors, recoverySIs...)
 
-	// Initialize grpc server
-	handleErr(app.InitGRPC(ctx))
+	// Add interceptors to service
+	app.AddGRPCStreamServerInterceptors(streamInterceptors...)
+	app.AddGRPCUnaryServerInterceptors(unaryInterceptors...)
 
 	// Readiness health check
 	app.AddEndpoint("/api/antibug/accounts/readyq/", healthcheck.RegisterProbe(&healthcheck.ProbeOptions{
@@ -53,17 +51,20 @@ func main() {
 		AutoMigrator: func() error { return nil },
 	}))
 
-	// Create account tracing instance
-	accountAPI, err := account_service.NewAccountAPI(ctx, &account_service.Options{
-		SQLDB:  app.GormDB(),
-		Logger: app.Logger(),
+	// Start app
+	app.Start(ctx, func() error {
+		accountAPI, err := account_service.NewAccountAPI(ctx, &account_service.Options{
+			SQLDB:      app.GormDB(),
+			Logger:     app.Logger(),
+			SigningKey: randomdata.RandStringRunes(32),
+		})
+		handleErr(err)
+
+		account.RegisterAccountAPIServer(app.GRPCServer(), accountAPI)
+		handleErr(account.RegisterAccountAPIHandlerServer(ctx, app.RuntimeMux(), accountAPI))
+
+		return nil
 	})
-	handleErr(err)
-
-	account.RegisterAccountAPIServer(app.GRPCServer(), accountAPI)
-	handleErr(account.RegisterAccountAPIHandlerServer(ctx, app.RuntimeMux(), accountAPI))
-
-	handleErr(app.Run(ctx))
 }
 
 func handleErr(err error) {
