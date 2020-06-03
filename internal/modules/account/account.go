@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/Pallinder/go-randomdata"
 	"github.com/gidyon/antibug/internal/pkg/auth"
 	"github.com/gidyon/antibug/internal/pkg/errs"
 	"github.com/gidyon/antibug/pkg/api/account"
@@ -17,14 +18,16 @@ import (
 )
 
 type accountAPIServer struct {
-	sqlDB  *gorm.DB
-	logger grpclog.LoggerV2
+	sqlDB   *gorm.DB
+	logger  grpclog.LoggerV2
+	authAPI auth.Interface
 }
 
 // Options contains parameters for passing to NewAccountAPI
 type Options struct {
-	SQLDB  *gorm.DB
-	Logger grpclog.LoggerV2
+	SQLDB      *gorm.DB
+	Logger     grpclog.LoggerV2
+	SigningKey string
 }
 
 // NewAccountAPI is factory for creating account APIs
@@ -37,14 +40,22 @@ func NewAccountAPI(ctx context.Context, opt *Options) (account.AccountAPIServer,
 		err = errs.NilObject("SqlDB")
 	case opt.Logger == nil:
 		err = errs.NilObject("Logger")
+	case opt.SigningKey == "":
+		err = errs.MissingField("signing key")
 	}
 	if err != nil {
 		return nil, err
 	}
 
+	authAPI, err := auth.NewAPI(randomdata.RandStringRunes(32))
+	if err != nil {
+		return nil, err
+	}
+
 	api := &accountAPIServer{
-		sqlDB:  opt.SQLDB,
-		logger: opt.Logger,
+		sqlDB:   opt.SQLDB,
+		logger:  opt.Logger,
+		authAPI: authAPI,
 	}
 
 	// Perform automigration
@@ -116,11 +127,12 @@ func (api *accountAPIServer) Login(
 	accountID := fmt.Sprint(accountDB.ID)
 
 	// Generate token
-	token, err := auth.GenToken(ctx, &auth.Payload{
-		ID:    accountID,
-		Names: accountDB.FirstName + " " + accountDB.LastName,
-		Group: accountDB.Group,
-	}, accountDB.Group, 0)
+	token, err := api.authAPI.GenToken(ctx, &auth.Payload{
+		ID:        accountID,
+		FirstName: accountDB.FirstName,
+		LastName:  accountDB.LastName,
+		Group:     accountDB.Group,
+	}, 0)
 	if err != nil {
 		return nil, errs.FailedToGenToken(err)
 	}
@@ -233,8 +245,13 @@ func (api *accountAPIServer) ActivateAccount(
 		return nil, errs.NilObject("ActivateAccountRequest")
 	}
 
+	// Authorize request
+	_, err := api.authAPI.AuthorizeActor(ctx, activateReq.AccountId)
+	if err != nil {
+		return nil, err
+	}
+
 	// Validation
-	var err error
 	switch {
 	case activateReq.AccountId == "":
 		err = errs.MissingField("account id")
@@ -260,8 +277,13 @@ func (api *accountAPIServer) UpdateAccount(
 		return nil, errs.NilObject("UpdateAccountRequest")
 	}
 
+	// Authorize request
+	_, err := api.authAPI.AuthorizeActor(ctx, updateReq.GetAccountId())
+	if err != nil {
+		return nil, err
+	}
+
 	// Validation
-	var err error
 	switch {
 	case updateReq.AccountId == "":
 		err = errs.MissingField("account id")
@@ -296,6 +318,12 @@ func (api *accountAPIServer) GetAccount(
 		return nil, errs.NilObject("GetRequest")
 	}
 
+	// Authorize request
+	_, err := api.authAPI.AuthorizeActor(ctx, getReq.GetAccountId())
+	if err != nil {
+		return nil, err
+	}
+
 	// Validation
 	if getReq.AccountId == "" {
 		return nil, errs.MissingField("account id")
@@ -304,7 +332,7 @@ func (api *accountAPIServer) GetAccount(
 	// Get from model
 	accountDB := &Account{}
 
-	err := api.sqlDB.First(accountDB, "id=?", getReq.AccountId).Error
+	err = api.sqlDB.First(accountDB, "id=?", getReq.AccountId).Error
 	switch {
 	case err == nil:
 	case errors.Is(err, gorm.ErrRecordNotFound):
@@ -329,6 +357,12 @@ func (api *accountAPIServer) GetSettings(
 		return nil, errs.NilObject("GetRequest")
 	}
 
+	// Authorize request
+	_, err := api.authAPI.AuthorizeActor(ctx, getReq.GetAccountId())
+	if err != nil {
+		return nil, err
+	}
+
 	// Validation
 	if getReq.AccountId == "" {
 		return nil, errs.MissingField("account id")
@@ -336,7 +370,7 @@ func (api *accountAPIServer) GetSettings(
 
 	// Get from database
 	data := make([]byte, 0)
-	err := api.sqlDB.Table(accountsTable).Where("id=?", getReq.AccountId).Select("settings").
+	err = api.sqlDB.Table(accountsTable).Where("id=?", getReq.AccountId).Select("settings").
 		Row().Scan(&data)
 	switch {
 	case err == nil:
@@ -362,8 +396,13 @@ func (api *accountAPIServer) UpdateSettings(
 		return nil, errs.NilObject("UpdateSettingsRequest")
 	}
 
+	// Authorize request
+	_, err := api.authAPI.AuthorizeActor(ctx, updateReq.GetAccountId())
+	if err != nil {
+		return nil, err
+	}
+
 	// Validation
-	var err error
 	switch {
 	case updateReq.Settings == nil:
 		err = errs.NilObject("Settings")
@@ -400,6 +439,12 @@ func (api *accountAPIServer) GetJobs(
 		return nil, errs.NilObject("GetRequest")
 	}
 
+	// Authorize request
+	_, err := api.authAPI.AuthorizeActor(ctx, getReq.GetAccountId())
+	if err != nil {
+		return nil, err
+	}
+
 	// Validation
 	if getReq.AccountId == "" {
 		return nil, errs.MissingField("account id")
@@ -407,7 +452,7 @@ func (api *accountAPIServer) GetJobs(
 
 	// Get from database
 	data := make([]byte, 0)
-	err := api.sqlDB.Table(accountsTable).Where("id=?", getReq.AccountId).Select("jobs").
+	err = api.sqlDB.Table(accountsTable).Where("id=?", getReq.AccountId).Select("jobs").
 		Row().Scan(&data)
 	switch {
 	case err == nil:
@@ -435,8 +480,13 @@ func (api *accountAPIServer) UpdateJobs(
 		return nil, errs.NilObject("UpdateJobsRequest")
 	}
 
+	// Authorize request
+	_, err := api.authAPI.AuthorizeActor(ctx, updateReq.GetAccountId())
+	if err != nil {
+		return nil, err
+	}
+
 	// Validation
-	var err error
 	switch {
 	case updateReq.Jobs == nil:
 		err = errs.NilObject("Jobs")
@@ -489,6 +539,12 @@ func (api *accountAPIServer) GetStarredFacilities(
 		return nil, errs.NilObject("GetRequest")
 	}
 
+	// Authorize request
+	_, err := api.authAPI.AuthorizeActor(ctx, getReq.GetAccountId())
+	if err != nil {
+		return nil, err
+	}
+
 	// Validation
 	if getReq.AccountId == "" {
 		return nil, errs.MissingField("account id")
@@ -496,7 +552,7 @@ func (api *accountAPIServer) GetStarredFacilities(
 
 	// Get from database
 	data := make([]byte, 0)
-	err := api.sqlDB.Table(accountsTable).Where("id=?", getReq.AccountId).Select("starred_facilities").
+	err = api.sqlDB.Table(accountsTable).Where("id=?", getReq.AccountId).Select("starred_facilities").
 		Row().Scan(&data)
 	switch {
 	case err == nil:
@@ -524,8 +580,13 @@ func (api *accountAPIServer) UpdateStarredFacilities(
 		return nil, errs.NilObject("UpdateStarredFacilitiesRequest")
 	}
 
+	// Authorize request
+	_, err := api.authAPI.AuthorizeActor(ctx, updateReq.GetAccountId())
+	if err != nil {
+		return nil, err
+	}
+
 	// Validation
-	var err error
 	switch {
 	case len(updateReq.Facilities) == 0:
 		err = errs.NilObject("Facilities")
