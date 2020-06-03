@@ -3,6 +3,8 @@ package culture
 import (
 	"context"
 	"fmt"
+	"github.com/Pallinder/go-randomdata"
+	"github.com/gidyon/antibug/internal/mocks"
 	"github.com/gidyon/antibug/pkg/api/culture"
 	"github.com/gidyon/micros"
 
@@ -45,8 +47,9 @@ var _ = BeforeSuite(func() {
 	Expect(err).ShouldNot(HaveOccurred())
 
 	opt := &Options{
-		SQLDB:  db,
-		Logger: micros.NewLogger("culture_app"),
+		SQLDB:      db,
+		Logger:     micros.NewLogger("culture_app"),
+		SigningKey: randomdata.RandStringRunes(32),
 	}
 
 	CultureAPI, err = NewCultureAPI(ctx, opt)
@@ -55,6 +58,11 @@ var _ = BeforeSuite(func() {
 	var ok bool
 	CultureServer, ok = CultureAPI.(*cultureAPIServer)
 	Expect(ok).Should(BeTrue())
+
+	CultureServer.authAPI = mocks.AuthAPI
+
+	_, err = NewCultureAPI(nil, opt)
+	Expect(err).Should(HaveOccurred())
 
 	opt.SQLDB = nil
 	_, err = NewCultureAPI(ctx, opt)
@@ -66,6 +74,9 @@ var _ = BeforeSuite(func() {
 	Expect(err).Should(HaveOccurred())
 
 	opt.Logger = micros.NewLogger("culture_app")
+	opt.SigningKey = ""
+	_, err = NewCultureAPI(ctx, opt)
+	Expect(err).Should(HaveOccurred())
 })
 
 var _ = AfterSuite(func() {
