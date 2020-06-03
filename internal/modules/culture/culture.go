@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gidyon/antibug/internal/modules"
+	"github.com/gidyon/antibug/internal/pkg/auth"
 	"github.com/gidyon/antibug/internal/pkg/errs"
 	"github.com/gidyon/antibug/pkg/api/culture"
 	"github.com/golang/protobuf/ptypes/empty"
@@ -14,15 +15,21 @@ import (
 	"strings"
 )
 
+var (
+	authorizedGroups = []string{auth.Physician, auth.Researcher, auth.LabTechnician, auth.Admin}
+)
+
 type cultureAPIServer struct {
-	sqlDB  *gorm.DB
-	logger grpclog.LoggerV2
+	sqlDB   *gorm.DB
+	logger  grpclog.LoggerV2
+	authAPI auth.Interface
 }
 
 // Options contains parameters to NewCultureAPI
 type Options struct {
-	SQLDB  *gorm.DB
-	Logger grpclog.LoggerV2
+	SQLDB      *gorm.DB
+	Logger     grpclog.LoggerV2
+	SigningKey string
 }
 
 // NewCultureAPI is factory for creating culture APIs
@@ -36,14 +43,22 @@ func NewCultureAPI(ctx context.Context, opt *Options) (culture.CultureAPIServer,
 		err = errs.NilObject("SqlDB")
 	case opt.Logger == nil:
 		err = errs.NilObject("Logger")
+	case opt.SigningKey == "":
+		err = errs.MissingField("JWT SigningKey")
 	}
 	if err != nil {
 		return nil, err
 	}
 
+	authAPI, err := auth.NewAPI(opt.SigningKey)
+	if err != nil {
+		return nil, err
+	}
+
 	capi := &cultureAPIServer{
-		sqlDB:  opt.SQLDB,
-		logger: opt.Logger,
+		sqlDB:   opt.SQLDB,
+		logger:  opt.Logger,
+		authAPI: authAPI,
 	}
 
 	// Perform automigration
@@ -63,8 +78,13 @@ func (capi *cultureAPIServer) CreateCulture(
 		return nil, errs.NilObject("CreateCultureRequest")
 	}
 
+	// Authorize request
+	_, err := capi.authAPI.AuthorizeGroup(ctx, authorizedGroups...)
+	if err != nil {
+		return nil, err
+	}
+
 	// Validation
-	var err error
 	culturePB := createReq.GetCulture()
 	switch {
 	case strings.TrimSpace(culturePB.LabTechId) == "":
@@ -121,9 +141,14 @@ func (capi *cultureAPIServer) UpdateCulture(
 		return nil, errs.NilObject("UpdateCultureRequest")
 	}
 
+	// Authorize request
+	_, err := capi.authAPI.AuthorizeGroup(ctx, authorizedGroups...)
+	if err != nil {
+		return nil, err
+	}
+
 	// Validation
 	culturePB := updateReq.GetCulture()
-	var err error
 	switch {
 	case culturePB == nil:
 		err = errs.NilObject("culture")
@@ -181,13 +206,19 @@ func (capi *cultureAPIServer) DeleteCulture(
 		return nil, errs.NilObject("DeleteCultureRequest")
 	}
 
+	// Authorize request
+	_, err := capi.authAPI.AuthorizeGroup(ctx, authorizedGroups...)
+	if err != nil {
+		return nil, err
+	}
+
 	// Validation
 	if delReq.CultureId == "" {
 		return nil, errs.MissingField("culture id")
 	}
 
 	// Delete in database
-	err := capi.sqlDB.Delete(&Culture{}, "id=?", delReq.CultureId).Error
+	err = capi.sqlDB.Delete(&Culture{}, "id=?", delReq.CultureId).Error
 	if err != nil {
 		return nil, errs.SQLQueryFailed(err, "DELETE")
 	}
@@ -201,6 +232,12 @@ func (capi *cultureAPIServer) ListCultures(
 	// Request must not be nil
 	if listReq == nil {
 		return nil, errs.NilObject("ListCulturesRequest")
+	}
+
+	// Authenticate request
+	err := capi.authAPI.AuthenticateRequest(ctx)
+	if err != nil {
+		return nil, err
 	}
 
 	db := capi.sqlDB
@@ -248,7 +285,7 @@ func (capi *cultureAPIServer) ListCultures(
 	offset := pageNumber*pageSize - pageSize
 
 	culturesDB := make([]*Culture, 0, pageSize)
-	err := db.Order("created_at DESC").Offset(offset).Limit(pageSize).
+	err = db.Order("created_at DESC").Offset(offset).Limit(pageSize).
 		Find(&culturesDB).Error
 	if err != nil {
 		return nil, errs.SQLQueryFailed(err, "LIST")
@@ -277,6 +314,12 @@ func (capi *cultureAPIServer) GetCulture(
 		return nil, errs.NilObject("GetCultureRequest")
 	}
 
+	// Authenticate request
+	err := capi.authAPI.AuthenticateRequest(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	// Validation
 	if getReq.CultureId == "" {
 		return nil, errs.MissingField("culture id")
@@ -284,7 +327,7 @@ func (capi *cultureAPIServer) GetCulture(
 
 	// Get culture from db
 	cultureDB := &Culture{}
-	err := capi.sqlDB.First(cultureDB, "id=?", getReq.CultureId).Error
+	err = capi.sqlDB.First(cultureDB, "id=?", getReq.CultureId).Error
 	switch {
 	case err == nil:
 	case errors.Is(err, gorm.ErrRecordNotFound):
