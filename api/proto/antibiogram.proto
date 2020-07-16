@@ -1,0 +1,171 @@
+syntax = "proto3";
+
+package antibug.antibiogram;
+
+option go_package="antibug.antibiogram";
+
+import "google/api/annotations.proto";
+import "protoc-gen-swagger/options/annotations.proto";
+import "culture.proto";
+
+// PathogenSusceptibility refers to susceptibility of a pathogen against an antimicrobial agent
+message PathogenSusceptibility {
+    string antimicrobial_name = 1;
+    string antimicrobial_id = 2;
+    int32 isolates = 3;
+    float susceptibility_score = 4;
+    antibug.culture.Label label = 5;
+}
+
+// AntimicrobialSusceptibility is the susceptibility of an antimicrobial against a pathogen 
+message AntimicrobialSusceptibility {
+    string pathogen_name = 1;
+    string pathogen_id = 2;
+    int32 isolates = 3;
+    float susceptibility_score = 4;
+    antibug.culture.Label label = 5;
+}
+
+// PathogenAntibiogram represents the antibiogram report for a particular pathogen
+message PathogenAntibiogram {
+    string pathogen_name = 1;
+    string pathogen_id = 2;
+    repeated PathogenSusceptibility susceptibilities = 4;
+}
+
+// Antibiogram report for multiple pathogens
+message PathogensAntibiogram {
+    repeated PathogenAntibiogram antibiograms =  1;
+}
+
+// AntimicrobialAntibiogram represents the antibiogram report for a particular antimicrobial
+message AntimicrobialAntibiogram {
+    string antimicrobial_name = 1;
+    string antimicrobial_id = 2;
+    repeated AntimicrobialSusceptibility susceptibilities = 4;
+}
+
+// Antibiogram report for multiple antimicrobials
+message AntimicrobialsAntibiogram {
+    repeated AntimicrobialAntibiogram antibiograms = 2;
+}
+
+// Represents the duration of time for filtering antibiograms
+enum Duration {
+    PAST_SIX_MONTHS = 0;
+    PAST_ONE_YEARS = 1;
+    PAST_TWO_YEARS = 2;
+    PAST_FOUR_YEARS = 3;
+    PAST_EIGHT_YEARS = 4;
+    PAST_SIXTEEN_YEARS = 5;
+    PAST_THIRTY_TWO_YEARS = 6;
+}
+
+// Represents the scope of the antibiogram
+enum RegionScope {
+    COUNTRY = 0;
+    COUNTY = 1;
+    SUB_COUNTY = 2;
+    FACILITY = 3;
+}
+
+// Represents gender group
+enum Gender {
+    ALL = 0;
+    MALE = 1;
+    FEMALE = 3;
+}
+
+// key value of the filter criteria
+message Value {
+    string name = 1;
+    string id = 2;
+}
+
+message AdvancedFilter {
+    Gender gender = 1;
+    int64 age_min_days = 2;
+    int64 age_max_days = 3;
+}
+
+// Filter represents the filter criteria used in filtering the antibiogram report
+message Filter {
+    Duration past_duration = 1;
+    RegionScope region_scope = 2;
+    repeated Value input_values = 3;
+    repeated string scope_values = 4;
+    bool advanced = 5;
+    AdvancedFilter advance = 6;
+}
+
+// Generates antibiograms for pathogen(s) or antimicrobial(s)
+service AntibiogramAPI {
+
+    // Generates antibiogram report for multiple pathogens
+    rpc GenPathogensAntibiogram(Filter) returns (PathogensAntibiogram) {
+        // GenPathogensAntibiogram maps to HTTP GET method
+        // Filter parameter is mapped into url parameters
+        option (google.api.http) = {
+            get: "/api/antibug/antibiograms/pathogens"
+        };
+    }
+
+    // Generates antibiogram report for a single pathogen
+    rpc GenPathogenAntibiogram(Filter) returns (PathogenAntibiogram) {
+        // GenPathogenAntibiogram maps to HTTP GET method
+        // Filter parameter is mapped into url parameters
+        option (google.api.http) = {
+            get: "/api/antibug/antibiograms/pathogen"
+        };
+    }
+
+    // Generates antibiogram report for multiple antimicrobials
+    rpc GenAntimicrobialsAntibiogram(Filter) returns (AntimicrobialsAntibiogram) {
+        // GenAntimicrobialsAntibiogram maps to HTTP GET method
+        // Filter parameter is mapped into url parameters
+        option (google.api.http) = {
+            get: "/api/antibug/antibiograms/antimicrobials"
+        };
+    }
+
+    // Generates antibiogram report for a single antimicrobial
+    rpc GenAntimicrobialAntibiogram(Filter) returns (AntimicrobialAntibiogram) {
+        // GenAntimicrobialAntibiogram maps to HTTP GET method
+        // Filter parameter is mapped into url parameters
+        option (google.api.http) = {
+            get: "/api/antibug/antibiograms/antimicrobial"
+        };
+    }   
+}
+
+option (grpc.gateway.protoc_gen_swagger.options.openapiv2_swagger) = {
+	info: {
+		title: "Antibiogram Service";
+		version: "1.0";
+		contact: {
+			name: "antibiogram service - antibug project";
+			url: "https://github.com/gidyon/antibug";
+			email: "gideonhacer@gmail.com";
+        };
+        license: {
+			name: "BSD 3-Clause License";
+			url: "https://github.com/gidyon/antibug/blob/master/LICENSE.txt";
+		};
+    };
+    schemes: HTTP;
+	schemes: HTTPS;
+	schemes: WSS;
+    consumes: "application/json";
+    produces: "application/json";
+    responses: {
+		key: "404";
+		value: {
+			description: "Returned when the resource does not exist.";
+			schema: {
+				json_schema: {
+					type: OBJECT;
+				}
+			}
+		}
+	}
+};

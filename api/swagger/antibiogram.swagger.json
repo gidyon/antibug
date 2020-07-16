@@ -1,0 +1,604 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Antibiogram Service",
+    "version": "1.0",
+    "contact": {
+      "name": "antibiogram service - antibug project",
+      "url": "https://github.com/gidyon/antibug",
+      "email": "gideonhacer@gmail.com"
+    },
+    "license": {
+      "name": "BSD 3-Clause License",
+      "url": "https://github.com/gidyon/antibug/blob/master/LICENSE.txt"
+    }
+  },
+  "schemes": [
+    "http",
+    "https",
+    "wss"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/api/antibug/antibiograms/antimicrobial": {
+      "get": {
+        "summary": "Generates antibiogram report for a single antimicrobial",
+        "operationId": "GenAntimicrobialAntibiogram",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/antibiogramAntimicrobialAntibiogram"
+            }
+          },
+          "404": {
+            "description": "Returned when the resource does not exist.",
+            "schema": {
+              "type": "object",
+              "format": "object"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "past_duration",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "PAST_SIX_MONTHS",
+              "PAST_ONE_YEARS",
+              "PAST_TWO_YEARS",
+              "PAST_FOUR_YEARS",
+              "PAST_EIGHT_YEARS",
+              "PAST_SIXTEEN_YEARS",
+              "PAST_THIRTY_TWO_YEARS"
+            ],
+            "default": "PAST_SIX_MONTHS"
+          },
+          {
+            "name": "region_scope",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "COUNTRY",
+              "COUNTY",
+              "SUB_COUNTY",
+              "FACILITY"
+            ],
+            "default": "COUNTRY"
+          },
+          {
+            "name": "scope_values",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "advanced",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          },
+          {
+            "name": "advance.gender",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "ALL",
+              "MALE",
+              "FEMALE"
+            ],
+            "default": "ALL"
+          },
+          {
+            "name": "advance.age_min_days",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "advance.age_max_days",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "AntibiogramAPI"
+        ]
+      }
+    },
+    "/api/antibug/antibiograms/antimicrobials": {
+      "get": {
+        "summary": "Generates antibiogram report for multiple antimicrobials",
+        "operationId": "GenAntimicrobialsAntibiogram",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/antibiogramAntimicrobialsAntibiogram"
+            }
+          },
+          "404": {
+            "description": "Returned when the resource does not exist.",
+            "schema": {
+              "type": "object",
+              "format": "object"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "past_duration",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "PAST_SIX_MONTHS",
+              "PAST_ONE_YEARS",
+              "PAST_TWO_YEARS",
+              "PAST_FOUR_YEARS",
+              "PAST_EIGHT_YEARS",
+              "PAST_SIXTEEN_YEARS",
+              "PAST_THIRTY_TWO_YEARS"
+            ],
+            "default": "PAST_SIX_MONTHS"
+          },
+          {
+            "name": "region_scope",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "COUNTRY",
+              "COUNTY",
+              "SUB_COUNTY",
+              "FACILITY"
+            ],
+            "default": "COUNTRY"
+          },
+          {
+            "name": "scope_values",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "advanced",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          },
+          {
+            "name": "advance.gender",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "ALL",
+              "MALE",
+              "FEMALE"
+            ],
+            "default": "ALL"
+          },
+          {
+            "name": "advance.age_min_days",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "advance.age_max_days",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "AntibiogramAPI"
+        ]
+      }
+    },
+    "/api/antibug/antibiograms/pathogen": {
+      "get": {
+        "summary": "Generates antibiogram report for a single pathogen",
+        "operationId": "GenPathogenAntibiogram",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/antibiogramPathogenAntibiogram"
+            }
+          },
+          "404": {
+            "description": "Returned when the resource does not exist.",
+            "schema": {
+              "type": "object",
+              "format": "object"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "past_duration",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "PAST_SIX_MONTHS",
+              "PAST_ONE_YEARS",
+              "PAST_TWO_YEARS",
+              "PAST_FOUR_YEARS",
+              "PAST_EIGHT_YEARS",
+              "PAST_SIXTEEN_YEARS",
+              "PAST_THIRTY_TWO_YEARS"
+            ],
+            "default": "PAST_SIX_MONTHS"
+          },
+          {
+            "name": "region_scope",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "COUNTRY",
+              "COUNTY",
+              "SUB_COUNTY",
+              "FACILITY"
+            ],
+            "default": "COUNTRY"
+          },
+          {
+            "name": "scope_values",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "advanced",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          },
+          {
+            "name": "advance.gender",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "ALL",
+              "MALE",
+              "FEMALE"
+            ],
+            "default": "ALL"
+          },
+          {
+            "name": "advance.age_min_days",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "advance.age_max_days",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "AntibiogramAPI"
+        ]
+      }
+    },
+    "/api/antibug/antibiograms/pathogens": {
+      "get": {
+        "summary": "Generates antibiogram report for multiple pathogens",
+        "operationId": "GenPathogensAntibiogram",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/antibiogramPathogensAntibiogram"
+            }
+          },
+          "404": {
+            "description": "Returned when the resource does not exist.",
+            "schema": {
+              "type": "object",
+              "format": "object"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "past_duration",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "PAST_SIX_MONTHS",
+              "PAST_ONE_YEARS",
+              "PAST_TWO_YEARS",
+              "PAST_FOUR_YEARS",
+              "PAST_EIGHT_YEARS",
+              "PAST_SIXTEEN_YEARS",
+              "PAST_THIRTY_TWO_YEARS"
+            ],
+            "default": "PAST_SIX_MONTHS"
+          },
+          {
+            "name": "region_scope",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "COUNTRY",
+              "COUNTY",
+              "SUB_COUNTY",
+              "FACILITY"
+            ],
+            "default": "COUNTRY"
+          },
+          {
+            "name": "scope_values",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "advanced",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          },
+          {
+            "name": "advance.gender",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "ALL",
+              "MALE",
+              "FEMALE"
+            ],
+            "default": "ALL"
+          },
+          {
+            "name": "advance.age_min_days",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "advance.age_max_days",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "AntibiogramAPI"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "antibiogramAdvancedFilter": {
+      "type": "object",
+      "properties": {
+        "gender": {
+          "$ref": "#/definitions/antibiogramGender"
+        },
+        "age_min_days": {
+          "type": "string",
+          "format": "int64"
+        },
+        "age_max_days": {
+          "type": "string",
+          "format": "int64"
+        }
+      }
+    },
+    "antibiogramAntimicrobialAntibiogram": {
+      "type": "object",
+      "properties": {
+        "antimicrobial_name": {
+          "type": "string"
+        },
+        "antimicrobial_id": {
+          "type": "string"
+        },
+        "susceptibilities": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/antibiogramAntimicrobialSusceptibility"
+          }
+        }
+      },
+      "title": "AntimicrobialAntibiogram represents the antibiogram report for a particular antimicrobial"
+    },
+    "antibiogramAntimicrobialSusceptibility": {
+      "type": "object",
+      "properties": {
+        "pathogen_name": {
+          "type": "string"
+        },
+        "pathogen_id": {
+          "type": "string"
+        },
+        "isolates": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "susceptibility_score": {
+          "type": "number",
+          "format": "float"
+        },
+        "label": {
+          "$ref": "#/definitions/antibugcultureLabel"
+        }
+      },
+      "title": "AntimicrobialSusceptibility is the susceptibility of an antimicrobial against a pathogen"
+    },
+    "antibiogramAntimicrobialsAntibiogram": {
+      "type": "object",
+      "properties": {
+        "antibiograms": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/antibiogramAntimicrobialAntibiogram"
+          }
+        }
+      },
+      "title": "Antibiogram report for multiple antimicrobials"
+    },
+    "antibiogramDuration": {
+      "type": "string",
+      "enum": [
+        "PAST_SIX_MONTHS",
+        "PAST_ONE_YEARS",
+        "PAST_TWO_YEARS",
+        "PAST_FOUR_YEARS",
+        "PAST_EIGHT_YEARS",
+        "PAST_SIXTEEN_YEARS",
+        "PAST_THIRTY_TWO_YEARS"
+      ],
+      "default": "PAST_SIX_MONTHS",
+      "title": "Represents the duration of time for filtering antibiograms"
+    },
+    "antibiogramGender": {
+      "type": "string",
+      "enum": [
+        "ALL",
+        "MALE",
+        "FEMALE"
+      ],
+      "default": "ALL",
+      "title": "Represents gender group"
+    },
+    "antibiogramPathogenAntibiogram": {
+      "type": "object",
+      "properties": {
+        "pathogen_name": {
+          "type": "string"
+        },
+        "pathogen_id": {
+          "type": "string"
+        },
+        "susceptibilities": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/antibiogramPathogenSusceptibility"
+          }
+        }
+      },
+      "title": "PathogenAntibiogram represents the antibiogram report for a particular pathogen"
+    },
+    "antibiogramPathogenSusceptibility": {
+      "type": "object",
+      "properties": {
+        "antimicrobial_name": {
+          "type": "string"
+        },
+        "antimicrobial_id": {
+          "type": "string"
+        },
+        "isolates": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "susceptibility_score": {
+          "type": "number",
+          "format": "float"
+        },
+        "label": {
+          "$ref": "#/definitions/antibugcultureLabel"
+        }
+      },
+      "title": "PathogenSusceptibility refers to susceptibility of a pathogen against an antimicrobial agent"
+    },
+    "antibiogramPathogensAntibiogram": {
+      "type": "object",
+      "properties": {
+        "antibiograms": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/antibiogramPathogenAntibiogram"
+          }
+        }
+      },
+      "title": "Antibiogram report for multiple pathogens"
+    },
+    "antibiogramRegionScope": {
+      "type": "string",
+      "enum": [
+        "COUNTRY",
+        "COUNTY",
+        "SUB_COUNTY",
+        "FACILITY"
+      ],
+      "default": "COUNTRY",
+      "title": "Represents the scope of the antibiogram"
+    },
+    "antibiogramValue": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        }
+      },
+      "title": "key value of the filter criteria"
+    },
+    "antibugcultureLabel": {
+      "type": "string",
+      "enum": [
+        "SUSCEPTIBLE",
+        "DOSE_SUSCEPTIBLE",
+        "INTERMEDIATE",
+        "RESISTANT"
+      ],
+      "default": "SUSCEPTIBLE",
+      "description": "- SUSCEPTIBLE: Antimicrobial was effective\n - DOSE_SUSCEPTIBLE: The antimicrobial was effective but under a given dosage\n - INTERMEDIATE: Not effective in certain concentrations\n - RESISTANT: Not effective at all",
+      "title": "Label is tag/boundary of antimicrobial used for culturing based on its action against the pathogen"
+    }
+  }
+}
