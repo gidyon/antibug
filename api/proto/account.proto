@@ -212,7 +212,7 @@ option (grpc.gateway.protoc_gen_swagger.options.openapiv2_swagger) = {
 		title: "Account Service";
 		version: "1.0";
 		contact: {
-			name: "accunts service - antibug project";
+			name: "accounts service - antibug project";
 			url: "https://github.com/gidyon/antibug";
 			email: "gideonhacer@gmail.com";
         };

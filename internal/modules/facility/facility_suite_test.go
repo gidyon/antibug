@@ -3,6 +3,8 @@ package facility
 import (
 	"context"
 	"fmt"
+	"github.com/Pallinder/go-randomdata"
+	"github.com/gidyon/antibug/internal/mocks"
 	"github.com/gidyon/antibug/pkg/api/facility"
 	"github.com/gidyon/micros"
 
@@ -33,7 +35,7 @@ const (
 
 func initDB() (*gorm.DB, error) {
 	param := "charset=utf8&parseTime=true"
-	dsn := fmt.Sprintf("root:antibug@2020@tcp(%s)/%s?%s", dbAddressAws, dbName, param)
+	dsn := fmt.Sprintf("root:hakty11@tcp(%s)/%s?%s", dbAddressLocal, dbName, param)
 	return gorm.Open("mysql", dsn)
 }
 
@@ -43,9 +45,12 @@ var _ = BeforeSuite(func() {
 	db, err := initDB()
 	Expect(err).ShouldNot(HaveOccurred())
 
+	db.LogMode(true)
+
 	opt := &Options{
-		SQLDB:  db,
-		Logger: micros.NewLogger("facility_app"),
+		SQLDB:         db,
+		Logger:        micros.NewLogger("facility_app"),
+		JWTSigningKey: randomdata.RandStringRunes(32),
 	}
 
 	FacilityAPI, err = NewFacilityAPI(ctx, opt)
@@ -54,6 +59,11 @@ var _ = BeforeSuite(func() {
 	var ok bool
 	FacilityServer, ok = FacilityAPI.(*facilityAPIServer)
 	Expect(ok).Should(BeTrue())
+
+	FacilityServer.authAPI = mocks.AuthAPI
+
+	_, err = NewFacilityAPI(nil, opt)
+	Expect(err).Should(HaveOccurred())
 
 	opt.SQLDB = nil
 	_, err = NewFacilityAPI(ctx, opt)
@@ -65,6 +75,9 @@ var _ = BeforeSuite(func() {
 	Expect(err).Should(HaveOccurred())
 
 	opt.Logger = micros.NewLogger("facility_app")
+	opt.JWTSigningKey = ""
+	_, err = NewFacilityAPI(ctx, opt)
+	Expect(err).Should(HaveOccurred())
 })
 
 var _ = AfterSuite(func() {

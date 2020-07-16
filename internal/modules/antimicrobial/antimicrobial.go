@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gidyon/antibug/internal/modules"
+	"github.com/gidyon/antibug/internal/pkg/auth"
 	"github.com/gidyon/antibug/internal/pkg/errs"
 	"github.com/gidyon/antibug/pkg/api/antimicrobial"
 	"github.com/golang/protobuf/ptypes/empty"
@@ -13,14 +14,22 @@ import (
 	"strings"
 )
 
+var (
+	createAllowedGroups = []string{auth.Physician, auth.Researcher, auth.LabTechnician, auth.Admin, auth.Pharmacist}
+	deleteAllowedGroups = []string{auth.Physician, auth.Researcher, auth.Admin}
+)
+
 type antimicrobialAPIServer struct {
-	sqlDB *gorm.DB
+	sqlDB   *gorm.DB
+	logger  grpclog.LoggerV2
+	authAPI auth.Interface
 }
 
 // Options contains parameters for NewAntimicrobialAPI
 type Options struct {
-	SQLDB  *gorm.DB
-	Logger grpclog.LoggerV2
+	SQLDB      *gorm.DB
+	Logger     grpclog.LoggerV2
+	SigningKey string
 }
 
 // NewAntimicrobialAPI creates a new antimicrobial API server
@@ -32,6 +41,8 @@ func NewAntimicrobialAPI(ctx context.Context, opt *Options) (antimicrobial.Antim
 		err = errs.NilObject("SqlDB")
 	case opt.Logger == nil:
 		err = errs.NilObject("Logger")
+	case opt.SigningKey == "":
+		err = errs.MissingField("Jwt SigningKey")
 	case ctx == nil:
 		err = errs.NilObject("Context")
 	}
@@ -39,8 +50,15 @@ func NewAntimicrobialAPI(ctx context.Context, opt *Options) (antimicrobial.Antim
 		return nil, err
 	}
 
+	authAPI, err := auth.NewAPI(opt.SigningKey)
+	if err != nil {
+		return nil, err
+	}
+
 	papi := &antimicrobialAPIServer{
-		sqlDB: opt.SQLDB,
+		sqlDB:   opt.SQLDB,
+		logger:  opt.Logger,
+		authAPI: authAPI,
 	}
 
 	// Perform auto migration
@@ -66,44 +84,46 @@ func (papi *antimicrobialAPIServer) CreateAntimicrobial(
 		return nil, errs.NilObject("CreateAntimicrobialRequest")
 	}
 
+	// Authorize request
+	_, err := papi.authAPI.AuthorizeGroup(ctx, createAllowedGroups...)
+	if err != nil {
+		return nil, err
+	}
+
 	antimicrobialPB := createReq.GetAntimicrobial()
 
 	// Validation
-	err := func() error {
-		var err error
-		switch {
-		case strings.TrimSpace(antimicrobialPB.AntimicrobialName) == "":
-			err = errs.MissingField("AntimicrobialName")
-		case strings.TrimSpace(antimicrobialPB.CDiff) == "":
-			err = errs.MissingField("CDiff")
-		case strings.TrimSpace(antimicrobialPB.OralBioavailability) == "":
-			err = errs.MissingField("OralBioavailability")
-		case strings.TrimSpace(antimicrobialPB.ApproximateCost) == "":
-			err = errs.MissingField("ApproximateCost")
-		case antimicrobialPB.GeneralUsage == nil ||
-			len(antimicrobialPB.GeneralUsage.Values) == 0:
-			err = errs.MissingField("GeneralUsage.Values")
-		case antimicrobialPB.DrugMonitoring == nil ||
-			len(antimicrobialPB.DrugMonitoring.Values) == 0:
-			err = errs.MissingField("DrugMonitoring.Values")
-		case antimicrobialPB.AdverseEffects == nil ||
-			len(antimicrobialPB.AdverseEffects.Values) == 0:
-			err = errs.MissingField("AdverseEffects.Values")
-		case antimicrobialPB.MajorInteractions == nil ||
-			len(antimicrobialPB.MajorInteractions.Values) == 0:
-			err = errs.MissingField("MajorInteractions.Values")
-		case antimicrobialPB.Pharmacology == nil ||
-			len(antimicrobialPB.Pharmacology.PharmacologyInfos) == 0:
-			err = errs.MissingField("Pharmacology")
-		case antimicrobialPB.AdditionalInformation == nil ||
-			len(antimicrobialPB.AdditionalInformation.Values) == 0:
-			err = errs.MissingField("AdditionalInformation")
-		case antimicrobialPB.ActivitySpectrum == nil ||
-			len(antimicrobialPB.ActivitySpectrum.Spectrum) == 0:
-			err = errs.MissingField("ActivitySpectrum")
-		}
-		return err
-	}()
+	switch {
+	case strings.TrimSpace(antimicrobialPB.AntimicrobialName) == "":
+		err = errs.MissingField("AntimicrobialName")
+	case strings.TrimSpace(antimicrobialPB.CDiff) == "":
+		err = errs.MissingField("CDiff")
+	case strings.TrimSpace(antimicrobialPB.OralBioavailability) == "":
+		err = errs.MissingField("OralBioavailability")
+	case strings.TrimSpace(antimicrobialPB.ApproximateCost) == "":
+		err = errs.MissingField("ApproximateCost")
+	case antimicrobialPB.GeneralUsage == nil ||
+		len(antimicrobialPB.GeneralUsage.Values) == 0:
+		err = errs.MissingField("GeneralUsage.Values")
+	case antimicrobialPB.DrugMonitoring == nil ||
+		len(antimicrobialPB.DrugMonitoring.Values) == 0:
+		err = errs.MissingField("DrugMonitoring.Values")
+	case antimicrobialPB.AdverseEffects == nil ||
+		len(antimicrobialPB.AdverseEffects.Values) == 0:
+		err = errs.MissingField("AdverseEffects.Values")
+	case antimicrobialPB.MajorInteractions == nil ||
+		len(antimicrobialPB.MajorInteractions.Values) == 0:
+		err = errs.MissingField("MajorInteractions.Values")
+	case antimicrobialPB.Pharmacology == nil ||
+		len(antimicrobialPB.Pharmacology.PharmacologyInfos) == 0:
+		err = errs.MissingField("Pharmacology")
+	case antimicrobialPB.AdditionalInformation == nil ||
+		len(antimicrobialPB.AdditionalInformation.Values) == 0:
+		err = errs.MissingField("AdditionalInformation")
+	case antimicrobialPB.ActivitySpectrum == nil ||
+		len(antimicrobialPB.ActivitySpectrum.Spectrum) == 0:
+		err = errs.MissingField("ActivitySpectrum")
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -138,6 +158,12 @@ func (papi *antimicrobialAPIServer) UpdateAntimicrobial(
 		return nil, errs.NilObject("UpdateAntimicrobialRequest")
 	}
 
+	// Authorize request
+	_, err := papi.authAPI.AuthorizeGroup(ctx, createAllowedGroups...)
+	if err != nil {
+		return nil, err
+	}
+
 	// Validation
 	if updateReq.GetAntimicrobialId() == "" {
 		return nil, errs.MissingField("")
@@ -167,13 +193,19 @@ func (papi *antimicrobialAPIServer) DeleteAntimicrobial(
 		return nil, errs.NilObject("DeleteAntimicrobialRequest")
 	}
 
+	// Authorize request
+	_, err := papi.authAPI.AuthorizeGroup(ctx, deleteAllowedGroups...)
+	if err != nil {
+		return nil, err
+	}
+
 	// Validation
 	if delReq.GetAntimicrobialId() == "" {
 		return nil, errs.MissingField("antimicrobial id")
 	}
 
 	// Delete in database
-	err := papi.sqlDB.Table(antimicrobialsTable).Delete(&Antimicrobial{}, "id=?", delReq.AntimicrobialId).Error
+	err = papi.sqlDB.Table(antimicrobialsTable).Delete(&Antimicrobial{}, "id=?", delReq.AntimicrobialId).Error
 	if err != nil {
 		return nil, errs.SQLQueryFailed(err, "DELETE")
 	}
@@ -189,12 +221,18 @@ func (papi *antimicrobialAPIServer) ListAntimicrobials(
 		return nil, errs.NilObject("ListAntimicrobialsRequest")
 	}
 
+	// Authenticate request
+	err := papi.authAPI.AuthenticateRequest(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	// Normalize page
 	pageNumber, pageSize := modules.NormalizePage(listReq.PageToken, listReq.PageSize)
 	offset := pageNumber*pageSize - pageSize
 
 	antimicrobialsDB := make([]*Antimicrobial, 0, pageSize)
-	err := papi.sqlDB.Order("created_at DESC").Offset(offset).Limit(pageSize).
+	err = papi.sqlDB.Order("created_at DESC").Offset(offset).Limit(pageSize).
 		Find(&antimicrobialsDB).Error
 	if err != nil {
 		return nil, errs.SQLQueryFailed(err, "LIST")
@@ -222,6 +260,12 @@ func (papi *antimicrobialAPIServer) SearchAntimicrobials(
 		return nil, errs.NilObject("SearchAntimicrobialsRequest")
 	}
 
+	// Authenticate request
+	err := papi.authAPI.AuthenticateRequest(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	// For empty queries
 	if searchReq.Query == "" {
 		return &antimicrobial.Antimicrobials{
@@ -236,7 +280,7 @@ func (papi *antimicrobialAPIServer) SearchAntimicrobials(
 
 	antimicrobialsDB := make([]*Antimicrobial, 0, pageSize)
 
-	err := papi.sqlDB.Unscoped().Offset(offset).Limit(pageSize).
+	err = papi.sqlDB.Unscoped().Offset(offset).Limit(pageSize).
 		Find(&antimicrobialsDB, "MATCH(antimicrobial_name) AGAINST(? IN BOOLEAN MODE)", parsedQuery).Error
 	switch {
 	case err == nil:
@@ -269,6 +313,12 @@ func (papi *antimicrobialAPIServer) GetAntimicrobial(
 		return nil, errs.NilObject("GetAntimicrobialRequest")
 	}
 
+	// Authenticate request
+	err := papi.authAPI.AuthenticateRequest(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	// Validation
 	if getReq.AntimicrobialId == "" {
 		return nil, errs.MissingField("antimicrobial id")
@@ -276,7 +326,7 @@ func (papi *antimicrobialAPIServer) GetAntimicrobial(
 
 	antimicrobialDB := &Antimicrobial{}
 
-	err := papi.sqlDB.First(antimicrobialDB, "id=?", getReq.AntimicrobialId).Error
+	err = papi.sqlDB.First(antimicrobialDB, "id=?", getReq.AntimicrobialId).Error
 	switch {
 	case err == nil:
 	case errors.Is(err, gorm.ErrRecordNotFound):

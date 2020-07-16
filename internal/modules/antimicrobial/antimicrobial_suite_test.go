@@ -3,6 +3,8 @@ package antimicrobial
 import (
 	"context"
 	"fmt"
+	"github.com/Pallinder/go-randomdata"
+	"github.com/gidyon/antibug/internal/mocks"
 	"github.com/gidyon/antibug/pkg/api/antimicrobial"
 	"github.com/gidyon/micros"
 
@@ -33,7 +35,7 @@ const (
 
 func initDB() (*gorm.DB, error) {
 	param := "charset=utf8&parseTime=true"
-	dsn := fmt.Sprintf("root:antibug@2020@tcp(%s)/%s?%s", dbAddressAws, dbName, param)
+	dsn := fmt.Sprintf("root:hakty11@tcp(%s)/%s?%s", dbAddressLocal, dbName, param)
 	return gorm.Open("mysql", dsn)
 }
 
@@ -44,8 +46,9 @@ var _ = BeforeSuite(func() {
 	Expect(err).ShouldNot(HaveOccurred())
 
 	opt := &Options{
-		SQLDB:  db,
-		Logger: micros.NewLogger("antimicrobial_app"),
+		SQLDB:      db,
+		Logger:     micros.NewLogger("antimicrobial_app"),
+		SigningKey: randomdata.RandStringRunes(32),
 	}
 
 	AntimicrobialAPI, err = NewAntimicrobialAPI(ctx, opt)
@@ -54,6 +57,12 @@ var _ = BeforeSuite(func() {
 	var ok bool
 	AntimicrobialServer, ok = AntimicrobialAPI.(*antimicrobialAPIServer)
 	Expect(ok).Should(BeTrue())
+
+	// Use mock authentication API
+	AntimicrobialServer.authAPI = mocks.AuthAPI
+
+	_, err = NewAntimicrobialAPI(nil, opt)
+	Expect(err).Should(HaveOccurred())
 
 	opt.SQLDB = nil
 	_, err = NewAntimicrobialAPI(ctx, opt)
@@ -65,6 +74,9 @@ var _ = BeforeSuite(func() {
 	Expect(err).Should(HaveOccurred())
 
 	opt.Logger = micros.NewLogger("antimicrobial_app")
+	opt.SigningKey = ""
+	_, err = NewAntimicrobialAPI(ctx, opt)
+	Expect(err).Should(HaveOccurred())
 })
 
 var _ = AfterSuite(func() {

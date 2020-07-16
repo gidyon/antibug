@@ -17,7 +17,7 @@ type Culture struct {
 	SubCountyCode       string `gorm:"type:int(11);not null"`
 	PatientID           string `gorm:"type:varchar(50);not null"`
 	PatientGender       string `gorm:"type:enum('male','female','all');not null;default:'all'"`
-	PatientAge          string `gorm:"type:tinyint(4);not null"`
+	PatientAge          int32  `gorm:"type:tinyint(4);not null"`
 	CultureSource       string `gorm:"type:varchar(50);not null"`
 	TestMethod          string `gorm:"type:varchar(50);not null"`
 	PathogensFound      []byte `gorm:"type:json;not null"`
@@ -33,6 +33,11 @@ type Culture struct {
 // TableName ...
 func (*Culture) TableName() string {
 	return culturesTable
+}
+
+// GetCultureDB gets the database model of a culture
+func GetCultureDB(culturePB *culture.Culture) (*Culture, error) {
+	return getCultureDB(culturePB)
 }
 
 func getCultureDB(culturePB *culture.Culture) (*Culture, error) {
@@ -95,6 +100,11 @@ func getCultureDB(culturePB *culture.Culture) (*Culture, error) {
 	}
 
 	return cultureDB, nil
+}
+
+// GetCulturePB gets the protobuf message equivalence of a pathogen
+func GetCulturePB(cultureDB *Culture) (*culture.Culture, error) {
+	return getCulturePB(cultureDB)
 }
 
 func getCulturePB(cultureDB *Culture) (*culture.Culture, error) {

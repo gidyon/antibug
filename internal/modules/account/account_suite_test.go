@@ -3,6 +3,8 @@ package account
 import (
 	"context"
 	"fmt"
+	"github.com/Pallinder/go-randomdata"
+	"github.com/gidyon/antibug/internal/mocks"
 	"github.com/gidyon/antibug/pkg/api/account"
 	"github.com/gidyon/micros"
 
@@ -43,8 +45,9 @@ var _ = BeforeSuite(func() {
 	Expect(err).ShouldNot(HaveOccurred())
 
 	opt := &Options{
-		SQLDB:  db,
-		Logger: micros.NewLogger("account_app"),
+		SQLDB:      db,
+		Logger:     micros.NewLogger("account_app"),
+		SigningKey: randomdata.RandStringRunes(32),
 	}
 
 	AccountAPI, err = NewAccountAPI(ctx, opt)
@@ -53,6 +56,9 @@ var _ = BeforeSuite(func() {
 	var ok bool
 	AccountServer, ok = AccountAPI.(*accountAPIServer)
 	Expect(ok).Should(BeTrue())
+
+	// Mock auth
+	AccountServer.authAPI = mocks.AuthAPI
 
 	opt.SQLDB = nil
 	_, err = NewAccountAPI(ctx, opt)
@@ -64,6 +70,11 @@ var _ = BeforeSuite(func() {
 	Expect(err).Should(HaveOccurred())
 
 	opt.Logger = micros.NewLogger("account_app")
+	opt.SigningKey = ""
+	_, err = NewAccountAPI(ctx, opt)
+	Expect(err).Should(HaveOccurred())
+
+	opt.SigningKey = randomdata.RandStringRunes(32)
 })
 
 var _ = AfterSuite(func() {

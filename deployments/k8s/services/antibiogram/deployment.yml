@@ -1,0 +1,96 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: antibug-antibiogram
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: antibug-antibiogram
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: antibug-antibiogram
+        version: v1
+    spec:
+      containers:
+      - name: antibug-antibiogram
+        image: gidyon/antibug-antibiogram:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 80
+          name: http
+          protocol: TCP
+        readinessProbe: # Checks that the container is started
+          httpGet:
+            path: /api/antibug/antibiograms/health/ready
+            port: 80
+          initialDelaySeconds: 0
+          failureThreshold: 3
+          successThreshold: 1
+          periodSeconds: 10
+        livenessProbe: # Checks that the container is running
+          httpGet:
+            path: /api/antibug/antibiograms/health/live
+            port: 80
+          initialDelaySeconds: 10
+          failureThreshold: 3
+          successThreshold: 1
+          periodSeconds: 10
+        env:
+        - name: JWT_SIGNING_KEY
+          valueFrom:
+            secretKeyRef:
+              name: jwt-signing-key
+              key: signing-key
+        volumeMounts:
+        - name: config
+          mountPath: /app/configs/
+          readOnly: true
+        - name: mysql-creds
+          mountPath: /app/secrets/mysql/
+          readOnly: true
+      volumes:
+      - name: config
+        configMap:
+          name: antibiogram-istio-v1
+      - name: mysql-creds
+        secret:
+          secretName: mysql-creds
+
+---
+apiVersion: autoscaling/v2beta1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: antibug-antibiogram-hpa
+  labels:
+    app: antibug-antibiogram
+spec:
+  scaleTargetRef:
+    kind: Deployment
+    name: antibug-antibiogram
+    apiVersion: apps/v1
+  minReplicas: 1
+  maxReplicas: 5
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      targetAverageUtilization: 80
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: antibiogram
+  labels:
+    app: antibiogram
+    service: antibiogram
+spec:
+  selector:
+    app: antibug-antibiogram
+  ports:
+  - port: 80
+    name: http
+    protocol: TCP

@@ -1,0 +1,73 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: antibug-gateway
+spec:
+  selector:
+    istio: ingressgateway # use istio default controller
+  servers:
+  - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    hosts:
+    - "*"
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: antibug
+spec:
+  hosts:
+  - "*"
+  gateways:
+  - antibug-gateway
+  http:
+  - match:
+    - uri:
+        prefix: /api/antibug/accounts
+    route:
+    - destination:
+        host: account
+        port:
+          number: 80
+  - match:
+    - uri:
+        prefix: /api/antibug/antibiogram
+    route:
+    - destination:
+        host: antibiogram
+        port:
+          number: 80
+  - match:
+    - uri:
+        prefix: /api/antibug/antimicrobials
+    route:
+    - destination:
+        host: antimicrobial
+        port:
+          number: 80
+  - match:
+    - uri:
+        prefix: /api/antibug/cultures
+    route:
+    - destination:
+        host: culture
+        port:
+          number: 80
+  - match:
+    - uri:
+        prefix: /api/antibug/facilities
+    route:
+    - destination:
+        host: facility
+        port:
+          number: 80
+  - match:
+    - uri:
+        prefix: /api/antibug/pathogens
+    route:
+    - destination:
+        host: pathogen
+        port:
+          number: 80

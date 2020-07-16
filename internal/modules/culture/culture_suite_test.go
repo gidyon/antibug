@@ -39,7 +39,7 @@ func initDB() (*gorm.DB, error) {
 }
 
 var _ = BeforeSuite(func() {
-	initCulture()
+	InitCulture()
 
 	ctx := context.Background()
 

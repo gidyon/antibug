@@ -54,6 +54,12 @@ var _ = Describe("Updating account settings #settings", func() {
 			Expect(status.Code(err)).To(Equal(codes.InvalidArgument))
 			Expect(updateRes).To(BeNil())
 		})
+		It("should fail when id is incorrect", func() {
+			updateRes, err := AccountAPI.UpdateSettings(ctx, updateReq)
+			Expect(err).To(HaveOccurred())
+			Expect(status.Code(err)).To(Equal(codes.InvalidArgument))
+			Expect(updateRes).To(BeNil())
+		})
 	})
 
 	Describe("Updating account settings with well-formed request", func() {

@@ -78,5 +78,15 @@ var _ = Describe("Search Pathogens #search", func() {
 				Expect(len(searchRes.Pathogens)).Should(BeZero())
 			})
 		})
+
+		Describe("Searching pathogens with empty search query", func() {
+			It("should return empty results", func() {
+				searchRes, err := PathogenAPI.SearchPathogens(ctx, searchReq)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(status.Code(err)).To(Equal(codes.OK))
+				Expect(searchRes).ToNot(BeNil())
+				Expect(len(searchRes.Pathogens)).Should(BeZero())
+			})
+		})
 	})
 })

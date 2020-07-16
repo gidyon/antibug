@@ -136,6 +136,11 @@ func WrapMessage(code codes.Code, msg string) error {
 	return status.Error(code, msg)
 }
 
+// WrapErrWithMessage is a wraps message provided to status error
+func WrapErrWithMessage(code codes.Code, err error, msg string) error {
+	return status.Errorf(code, "%s: %v", msg, err)
+}
+
 // FailedToGenToken wraps error caused while generating jwt token to a status error
 func FailedToGenToken(err error) error {
 	return status.Errorf(codes.Internal, "failed to generate jwt token: %v", err)

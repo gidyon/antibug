@@ -45,7 +45,7 @@ var _ = Describe("Deleting culture resource #delete", func() {
 		Context("Lets create culture first", func() {
 			It("should succeed", func() {
 				createReq := &culture.CreateCultureRequest{
-					Culture: fakeCulture(),
+					Culture: FakeCulture(),
 				}
 				createRes, err := CultureAPI.CreateCulture(ctx, createReq)
 				Expect(err).ToNot(HaveOccurred())

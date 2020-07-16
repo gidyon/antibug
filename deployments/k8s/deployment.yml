@@ -1,0 +1,104 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: antibug-gateway
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: antibug-gateway
+  template:
+    metadata:
+      labels:
+        app: antibug-gateway
+    spec:
+      containers:
+      - name: antibug-gateway
+        image: gidyon/antibug-gateway:v2.1
+        args: ["--cors", "--services-file", "/app/configs/gateway.yml", "--port", "443"]
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 443
+          name: https
+          protocol: TCP
+        readinessProbe: # Checks that the container is started
+          httpGet:
+            path: /readyq
+            scheme: HTTPS
+            port: 443
+          initialDelaySeconds: 5
+          timeoutSeconds: 1
+          periodSeconds: 10
+          failureThreshold: 3
+        livenessProbe: # Checks that the container is running
+          httpGet:
+            path: /liveq
+            scheme: HTTPS
+            port: 443
+          initialDelaySeconds: 5
+          timeoutSeconds: 1
+          periodSeconds: 10
+          failureThreshold: 3
+        volumeMounts:
+          - name: gateway-config
+            mountPath: /app/configs/
+            readOnly: true
+          - name: mysql-creds
+            mountPath: /app/secrets/mysql/
+            readOnly: true
+          - name: gateway-tls
+            mountPath: /app/secrets/certs
+            readOnly: true
+      volumes:
+      - name: gateway-config
+        configMap:
+          name: gateway-v1
+      - name: mysql-creds
+        secret:
+          secretName: mysql-credentials
+      - name: gateway-tls
+        secret:
+          secretName: antibug-tls-v1
+
+---
+apiVersion: "autoscaling/v2beta1"
+kind: "HorizontalPodAutoscaler"
+metadata:
+  name: "antibug-gateway-hpa"
+  labels:
+    app: "antibug-gateway"
+spec:
+  scaleTargetRef:
+    kind: "Deployment"
+    name: "antibug-gateway"
+    apiVersion: "apps/v1"
+  minReplicas: 1
+  maxReplicas: 5
+  metrics:
+  - type: "Resource"
+    resource:
+      name: "cpu"
+      targetAverageUtilization: 80
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gateway
+  labels:
+    app: antibug-gateway
+spec:
+  type: NodePort
+  selector:
+    app: antibug-gateway
+  ports:
+  - port: 443
+    name: https
+    targetPort: https
+    protocol: TCP
+    nodePort: 31783
+  - port: 80
+    name: http
+    targetPort: https
+    protocol: TCP
+    nodePort: 31780

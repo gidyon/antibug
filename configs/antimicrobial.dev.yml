@@ -9,7 +9,7 @@ security:
   tlsCert: /home/gideon/go/src/github.com/gidyon/antibug/certs/localhost/cert.pem
   tlsKey: /home/gideon/go/src/github.com/gidyon/antibug/certs/localhost/key.pem
   serverName: localhost
-  # insecure: true
+  insecure: true
 databases:
   sqlDatabase:
     required: true

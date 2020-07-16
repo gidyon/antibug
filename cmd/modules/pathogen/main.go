@@ -7,9 +7,10 @@ import (
 	app_grpc_middleware "github.com/gidyon/micros/pkg/grpc/middleware"
 	"github.com/gidyon/micros/utils/healthcheck"
 	"google.golang.org/grpc"
+	"os"
 
-	"github.com/gidyon/config"
 	"github.com/gidyon/micros"
+	"github.com/gidyon/micros/pkg/config"
 
 	"github.com/Sirupsen/logrus"
 )
@@ -26,43 +27,44 @@ func main() {
 	unaryInterceptors := make([]grpc.UnaryServerInterceptor, 0)
 	streamInterceptors := make([]grpc.StreamServerInterceptor, 0)
 
-	// Unary interceptor for authentication
-	contractAuth := grpc.UnaryServerInterceptor(authInterceptor)
-	unaryInterceptors = append(unaryInterceptors, contractAuth)
-
 	// Recovery middleware
 	recoveryUIs, recoverySIs := app_grpc_middleware.AddRecovery()
 	unaryInterceptors = append(unaryInterceptors, recoveryUIs...)
 	streamInterceptors = append(streamInterceptors, recoverySIs...)
 
-	// Initialize grpc server
-	handleErr(app.InitGRPC(ctx))
+	// Add interceptors to service
+	app.AddGRPCStreamServerInterceptors(streamInterceptors...)
+	app.AddGRPCUnaryServerInterceptors(unaryInterceptors...)
 
 	// Readiness health check
-	app.AddEndpoint("/api/antibug/pathogens/readyq/", healthcheck.RegisterProbe(&healthcheck.ProbeOptions{
+	app.AddEndpoint("/api/antibug/pathogens/health/ready", healthcheck.RegisterProbe(&healthcheck.ProbeOptions{
 		Service:      app,
 		Type:         healthcheck.ProbeReadiness,
 		AutoMigrator: func() error { return nil },
 	}))
 
 	// Liveness health check
-	app.AddEndpoint("/api/antibug/pathogens/liveq/", healthcheck.RegisterProbe(&healthcheck.ProbeOptions{
+	app.AddEndpoint("/api/antibug/pathogens/health/live", healthcheck.RegisterProbe(&healthcheck.ProbeOptions{
 		Service:      app,
 		Type:         healthcheck.ProbeLiveNess,
 		AutoMigrator: func() error { return nil },
 	}))
 
-	// Create pathogen tracing instance
-	pathogenAPI, err := pathogen_service.NewPathogenAPI(ctx, &pathogen_service.Options{
-		SQLDB:  app.GormDB(),
-		Logger: app.Logger(),
+	// Start service
+	app.Start(ctx, func() error {
+		// Create pathogen tracing instance
+		pathogenAPI, err := pathogen_service.NewPathogenAPI(ctx, &pathogen_service.Options{
+			SQLDB:         app.GormDB(),
+			Logger:        app.Logger(),
+			JWTSigningKey: os.Getenv("JWT_SIGNING_KEY"),
+		})
+		handleErr(err)
+
+		pathogen.RegisterPathogenAPIServer(app.GRPCServer(), pathogenAPI)
+		handleErr(pathogen.RegisterPathogenAPIHandlerServer(ctx, app.RuntimeMux(), pathogenAPI))
+
+		return nil
 	})
-	handleErr(err)
-
-	pathogen.RegisterPathogenAPIServer(app.GRPCServer(), pathogenAPI)
-	handleErr(pathogen.RegisterPathogenAPIHandlerServer(ctx, app.RuntimeMux(), pathogenAPI))
-
-	handleErr(app.Run(ctx))
 }
 
 func handleErr(err error) {

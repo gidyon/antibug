@@ -2,11 +2,11 @@ package main
 
 import (
 	"context"
-	"github.com/Pallinder/go-randomdata"
 	"github.com/gidyon/antibug/pkg/api/account"
 	app_grpc_middleware "github.com/gidyon/micros/pkg/grpc/middleware"
 	"github.com/gidyon/micros/utils/healthcheck"
 	"google.golang.org/grpc"
+	"os"
 
 	account_service "github.com/gidyon/antibug/internal/modules/account"
 
@@ -38,14 +38,14 @@ func main() {
 	app.AddGRPCUnaryServerInterceptors(unaryInterceptors...)
 
 	// Readiness health check
-	app.AddEndpoint("/api/antibug/accounts/readyq/", healthcheck.RegisterProbe(&healthcheck.ProbeOptions{
+	app.AddEndpoint("/api/antibug/accounts/health/ready", healthcheck.RegisterProbe(&healthcheck.ProbeOptions{
 		Service:      app,
 		Type:         healthcheck.ProbeReadiness,
 		AutoMigrator: func() error { return nil },
 	}))
 
 	// Liveness health check
-	app.AddEndpoint("/api/antibug/accounts/liveq/", healthcheck.RegisterProbe(&healthcheck.ProbeOptions{
+	app.AddEndpoint("/api/antibug/accounts/health/live", healthcheck.RegisterProbe(&healthcheck.ProbeOptions{
 		Service:      app,
 		Type:         healthcheck.ProbeLiveNess,
 		AutoMigrator: func() error { return nil },
@@ -56,7 +56,7 @@ func main() {
 		accountAPI, err := account_service.NewAccountAPI(ctx, &account_service.Options{
 			SQLDB:      app.GormDB(),
 			Logger:     app.Logger(),
-			SigningKey: randomdata.RandStringRunes(32),
+			SigningKey: os.Getenv("JWT_SIGNING_KEY"),
 		})
 		handleErr(err)
 

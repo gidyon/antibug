@@ -1,7 +1,7 @@
 version: '3'
 
 services:
-  mysqldb:
+  mysql:
     image: mysql:8.0.18
     container_name: mysql
     ports:
@@ -17,13 +17,13 @@ services:
       MYSQL_ROOT_PASSWORD: hakty11
       MYSQL_DATABASE: antibug
   
-  # redis:
-  #   container_name: redis
-  #   image: redislabs/redisearch:latest
-  #   ports:
-  #     - "6379:6379"
-  #   networks:
-  #     - frontend-bridge
+  redis:
+    container_name: redis
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    networks:
+      - frontend-bridge
 
 networks:
   frontend-bridge:

@@ -17,7 +17,7 @@ message Culture {
     string sub_county_code = 5;
     string patient_id = 6;
     string patient_gender = 7;
-    string patient_age = 8;
+    int32 patient_age = 8;
     repeated string editors = 9;
     TestMethod test_method = 10;
     string culture_source = 11;
@@ -68,7 +68,8 @@ message LabTestResult {
     string disk_diameter  = 5;
     string non_diffusion_result = 6;
     string result_comment = 7;
-    Label label = 8;
+    float susceptibility_score = 8;
+    Label label = 9;
 }
 
 // CreateCultureRequest is request to add a culture

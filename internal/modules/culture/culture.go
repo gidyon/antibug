@@ -99,7 +99,7 @@ func (capi *cultureAPIServer) CreateCulture(
 		err = errs.MissingField("patient id")
 	case strings.TrimSpace(culturePB.PatientGender) == "":
 		err = errs.MissingField("patient gender")
-	case strings.TrimSpace(culturePB.PatientAge) == "":
+	case culturePB.PatientAge <= 0:
 		err = errs.MissingField("patient age")
 	case strings.TrimSpace(culturePB.CultureSource) == "":
 		err = errs.MissingField("culture source")

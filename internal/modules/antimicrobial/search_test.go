@@ -78,5 +78,16 @@ var _ = Describe("Search Antimicrobials #search", func() {
 				Expect(len(searchRes.Antimicrobials)).Should(BeZero())
 			})
 		})
+
+		Context("Searching antimicrobial with missing query", func() {
+			It("should succeed but return 0 results", func() {
+				searchReq.Query = ""
+				searchRes, err := AntimicrobialAPI.SearchAntimicrobials(ctx, searchReq)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(status.Code(err)).To(Equal(codes.OK))
+				Expect(searchRes).ToNot(BeNil())
+				Expect(len(searchRes.Antimicrobials)).Should(BeZero())
+			})
+		})
 	})
 })

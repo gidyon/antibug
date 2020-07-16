@@ -15,7 +15,7 @@ var _ = Describe("Creating culture resource #create", func() {
 
 	BeforeEach(func() {
 		createReq = &culture.CreateCultureRequest{
-			Culture: fakeCulture(),
+			Culture: FakeCulture(),
 		}
 		ctx = context.Background()
 	})
@@ -57,7 +57,7 @@ var _ = Describe("Creating culture resource #create", func() {
 			Expect(createRes).To(BeNil())
 		})
 		It("should fail when patient age is missing", func() {
-			createReq.Culture.PatientAge = ""
+			createReq.Culture.PatientAge = -1
 			createRes, err := CultureAPI.CreateCulture(ctx, createReq)
 			Expect(err).To(HaveOccurred())
 			Expect(status.Code(err)).To(Equal(codes.InvalidArgument))

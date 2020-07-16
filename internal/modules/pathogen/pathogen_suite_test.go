@@ -1,12 +1,14 @@
 package pathogen
 
 import (
-	"time"
-	"math/rand"
 	"context"
 	"fmt"
+	"github.com/Pallinder/go-randomdata"
+	"github.com/gidyon/antibug/internal/mocks"
 	"github.com/gidyon/antibug/pkg/api/pathogen"
 	"github.com/gidyon/micros"
+	"math/rand"
+	"time"
 
 	// Imports mysql driver
 	_ "github.com/go-sql-driver/mysql"
@@ -35,21 +37,22 @@ const (
 
 func initDB() (*gorm.DB, error) {
 	param := "charset=utf8&parseTime=true"
-	dsn := fmt.Sprintf("root:antibug@2020@tcp(%s)/%s?%s", dbAddressAws, dbName, param)
+	dsn := fmt.Sprintf("root:hakty11@tcp(%s)/%s?%s", dbAddressLocal, dbName, param)
 	return gorm.Open("mysql", dsn)
 }
 
 var _ = BeforeSuite(func() {
 	rand.Seed(time.Now().UnixNano())
-	
+
 	ctx := context.Background()
 
 	db, err := initDB()
 	Expect(err).ShouldNot(HaveOccurred())
 
 	opt := &Options{
-		SQLDB:  db,
-		Logger: micros.NewLogger("pathogen_app"),
+		SQLDB:         db,
+		Logger:        micros.NewLogger("pathogen_app"),
+		JWTSigningKey: randomdata.RandStringRunes(32),
 	}
 
 	PathogenAPI, err = NewPathogenAPI(ctx, opt)
@@ -58,6 +61,11 @@ var _ = BeforeSuite(func() {
 	var ok bool
 	PathogenServer, ok = PathogenAPI.(*pathogenAPIServer)
 	Expect(ok).Should(BeTrue())
+
+	PathogenServer.authAPI = mocks.AuthAPI
+
+	_, err = NewPathogenAPI(nil, opt)
+	Expect(err).Should(HaveOccurred())
 
 	opt.SQLDB = nil
 	_, err = NewPathogenAPI(ctx, opt)
@@ -69,6 +77,10 @@ var _ = BeforeSuite(func() {
 	Expect(err).Should(HaveOccurred())
 
 	opt.Logger = micros.NewLogger("pathogen_app")
+	opt.JWTSigningKey = ""
+	_, err = NewPathogenAPI(ctx, opt)
+	Expect(err).Should(HaveOccurred())
+
 })
 
 var _ = AfterSuite(func() {

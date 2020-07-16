@@ -2,27 +2,25 @@ package auth
 
 import (
 	"context"
-	"fmt"
-	"os"
-
-	"github.com/Pallinder/go-randomdata"
 	"github.com/dgrijalva/jwt-go"
-	"github.com/google/uuid"
-	grpc_auth "github.com/grpc-ecosystem/go-grpc-middleware/auth"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
+	"os"
 )
 
 var (
 	signingKey                      = []byte(os.Getenv("JWT_TOKEN"))
 	signingMethod jwt.SigningMethod = jwt.SigningMethodHS256
+	defaultAPI                      = &authAPI{string(signingKey)}
 )
 
 // Payload contains jwt payload
 type Payload struct {
-	ID    string
-	Names string
-	Group string
+	ID           string
+	FirstName    string
+	LastName     string
+	PhoneNumber  string
+	EmailAddress string
+	Group        string
+	Label        string
 }
 
 // Claims contains JWT claims information
@@ -31,73 +29,42 @@ type Claims struct {
 	jwt.StandardClaims
 }
 
-// GenToken generates json web token
-func GenToken(
-	ctx context.Context, payload *Payload, group string, expires int64,
-) (tokenStr string, err error) {
-	// Handling any panic is good trust me!
-	defer func() {
-		if err2 := recover(); err2 != nil {
-			err = fmt.Errorf("%v", err2)
-		}
-	}()
-
-	if payload == nil {
-		payload = &Payload{
-			ID:    uuid.New().String(),
-			Names: randomdata.SillyName(),
-			Group: group,
-		}
-	}
-
-	token := jwt.NewWithClaims(signingMethod, Claims{
-		Payload: payload,
-		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: expires,
-			Issuer:    "antibug",
-		},
-	})
-
-	// Generate the token
-	return token.SignedString(signingKey)
+// AuthenticateRequest authenticates a request whether it contains valid jwt in metadata
+func AuthenticateRequest(ctx context.Context) error {
+	return defaultAPI.AuthenticateRequest(ctx)
 }
 
-// ParseToken parses a jwt token and return claims or error if token is invalid
-func ParseToken(tokenString string) (claims *Claims, err error) {
-	// Handling any panic is good trust me!
-	defer func() {
-		if err2 := recover(); err2 != nil {
-			err = fmt.Errorf("%v", err2)
-		}
-	}()
+// AuthenticateActor authenticates actor
+func AuthenticateActor(ctx context.Context, actorID string) (*Payload, error) {
+	return defaultAPI.AuthorizeActor(ctx, actorID)
+}
 
-	token, err := jwt.ParseWithClaims(
-		tokenString,
-		&Claims{},
-		func(token *jwt.Token) (interface{}, error) {
-			return signingKey, nil
-		},
-	)
-	if err != nil {
-		return nil, status.Errorf(
-			codes.Unauthenticated, "failed to parse token with claims: %v", err,
-		)
-	}
-	claims, ok := token.Claims.(*Claims)
-	if !ok || !token.Valid {
-		return nil, status.Error(codes.Unauthenticated, "the token is not valid")
-	}
-	return claims, nil
+// AuthorizeGroup authorizes an actor group against allowed groups
+func AuthorizeGroup(ctx context.Context, allowedGroups ...string) (*Payload, error) {
+	return defaultAPI.AuthorizeGroup(ctx, allowedGroups...)
+}
+
+// AuthorizeStrict authenticates and authorizes an actor and group against allowed groups
+func AuthorizeStrict(ctx context.Context, actorID string, allowedGroups ...string) (*Payload, error) {
+	return defaultAPI.AuthorizeStrict(ctx, actorID, allowedGroups...)
+}
+
+// GenToken generates jwt
+func GenToken(ctx context.Context, payload *Payload, expires int64) (string, error) {
+	return defaultAPI.GenToken(ctx, payload, expires)
+}
+
+// AddMD adds metadata to token
+func AddMD(ctx context.Context, actorID, group string) context.Context {
+	return defaultAPI.AddMD(ctx, actorID, group)
+}
+
+// ParseToken parses a jwt token and return claims
+func ParseToken(tokenString string) (claims *Claims, err error) {
+	return defaultAPI.ParseToken(tokenString)
 }
 
 // ParseFromCtx jwt token from context
 func ParseFromCtx(ctx context.Context) (*Claims, error) {
-	token, err := grpc_auth.AuthFromMD(ctx, "Bearer")
-	if err != nil {
-		return nil, status.Errorf(
-			codes.Internal, "failed to get Bearer from authorization header: %v", err,
-		)
-	}
-
-	return ParseToken(token)
+	return defaultAPI.ParseFromCtx(ctx)
 }

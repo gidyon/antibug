@@ -49,7 +49,7 @@ var _ = Describe("Listing cultures #list", func() {
 		Context("Lets create atleast on culture", func() {
 			It("should succeed", func() {
 				createReq := &culture.CreateCultureRequest{
-					Culture: fakeCulture(),
+					Culture: FakeCulture(),
 				}
 				createRes, err := CultureAPI.CreateCulture(ctx, createReq)
 				Expect(err).ToNot(HaveOccurred())
@@ -82,7 +82,7 @@ var _ = Describe("Listing cultures #list", func() {
 		Context("Lets create atleast on culture", func() {
 			It("should succeed", func() {
 				createReq := &culture.CreateCultureRequest{
-					Culture: fakeCulture(),
+					Culture: FakeCulture(),
 				}
 				createRes, err := CultureAPI.CreateCulture(ctx, createReq)
 				Expect(err).ToNot(HaveOccurred())
@@ -115,7 +115,7 @@ var _ = Describe("Listing cultures #list", func() {
 		Context("Lets create atleast on culture", func() {
 			It("should succeed", func() {
 				createReq := &culture.CreateCultureRequest{
-					Culture: fakeCulture(),
+					Culture: FakeCulture(),
 				}
 				createRes, err := CultureAPI.CreateCulture(ctx, createReq)
 				Expect(err).ToNot(HaveOccurred())
@@ -148,7 +148,7 @@ var _ = Describe("Listing cultures #list", func() {
 		Context("Lets create atleast on culture", func() {
 			It("should succeed", func() {
 				createReq := &culture.CreateCultureRequest{
-					Culture: fakeCulture(),
+					Culture: FakeCulture(),
 				}
 				createRes, err := CultureAPI.CreateCulture(ctx, createReq)
 				Expect(err).ToNot(HaveOccurred())
@@ -181,7 +181,7 @@ var _ = Describe("Listing cultures #list", func() {
 		Context("Lets create atleast on culture", func() {
 			It("should succeed", func() {
 				createReq := &culture.CreateCultureRequest{
-					Culture: fakeCulture(),
+					Culture: FakeCulture(),
 				}
 				createRes, err := CultureAPI.CreateCulture(ctx, createReq)
 				Expect(err).ToNot(HaveOccurred())
@@ -214,7 +214,7 @@ var _ = Describe("Listing cultures #list", func() {
 		Context("Lets create atleast on culture", func() {
 			It("should succeed", func() {
 				createReq := &culture.CreateCultureRequest{
-					Culture: fakeCulture(),
+					Culture: FakeCulture(),
 				}
 				createRes, err := CultureAPI.CreateCulture(ctx, createReq)
 				Expect(err).ToNot(HaveOccurred())

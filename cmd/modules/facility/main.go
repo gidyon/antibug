@@ -7,9 +7,10 @@ import (
 	app_grpc_middleware "github.com/gidyon/micros/pkg/grpc/middleware"
 	"github.com/gidyon/micros/utils/healthcheck"
 	"google.golang.org/grpc"
+	"os"
 
-	"github.com/gidyon/config"
 	"github.com/gidyon/micros"
+	"github.com/gidyon/micros/pkg/config"
 
 	"github.com/Sirupsen/logrus"
 )
@@ -26,43 +27,44 @@ func main() {
 	unaryInterceptors := make([]grpc.UnaryServerInterceptor, 0)
 	streamInterceptors := make([]grpc.StreamServerInterceptor, 0)
 
-	// Unary interceptor for authentication
-	contractAuth := grpc.UnaryServerInterceptor(authInterceptor)
-	unaryInterceptors = append(unaryInterceptors, contractAuth)
-
 	// Recovery middleware
 	recoveryUIs, recoverySIs := app_grpc_middleware.AddRecovery()
 	unaryInterceptors = append(unaryInterceptors, recoveryUIs...)
 	streamInterceptors = append(streamInterceptors, recoverySIs...)
 
-	// Initialize grpc server
-	handleErr(app.InitGRPC(ctx))
+	// Add interceptors to service
+	app.AddGRPCStreamServerInterceptors(streamInterceptors...)
+	app.AddGRPCUnaryServerInterceptors(unaryInterceptors...)
 
 	// Readiness health check
-	app.AddEndpoint("/api/antibug/facilities/readyq/", healthcheck.RegisterProbe(&healthcheck.ProbeOptions{
+	app.AddEndpoint("/api/antibug/facilities/health/ready", healthcheck.RegisterProbe(&healthcheck.ProbeOptions{
 		Service:      app,
 		Type:         healthcheck.ProbeReadiness,
 		AutoMigrator: func() error { return nil },
 	}))
 
 	// Liveness health check
-	app.AddEndpoint("/api/antibug/facilities/liveq/", healthcheck.RegisterProbe(&healthcheck.ProbeOptions{
+	app.AddEndpoint("/api/antibug/facilities/health/live", healthcheck.RegisterProbe(&healthcheck.ProbeOptions{
 		Service:      app,
 		Type:         healthcheck.ProbeLiveNess,
 		AutoMigrator: func() error { return nil },
 	}))
 
-	// Create facility tracing instance
-	facilityAPI, err := facility_service.NewFacilityAPI(ctx, &facility_service.Options{
-		SQLDB:  app.GormDB(),
-		Logger: app.Logger(),
+	// Start service
+	app.Start(ctx, func() error {
+		// Create facility tracing instance
+		facilityAPI, err := facility_service.NewFacilityAPI(ctx, &facility_service.Options{
+			SQLDB:         app.GormDB(),
+			Logger:        app.Logger(),
+			JWTSigningKey: os.Getenv("JWT_SIGNING_KEY"),
+		})
+		handleErr(err)
+
+		facility.RegisterFacilityAPIServer(app.GRPCServer(), facilityAPI)
+		handleErr(facility.RegisterFacilityAPIHandlerServer(ctx, app.RuntimeMux(), facilityAPI))
+
+		return nil
 	})
-	handleErr(err)
-
-	facility.RegisterFacilityAPIServer(app.GRPCServer(), facilityAPI)
-	handleErr(facility.RegisterFacilityAPIHandlerServer(ctx, app.RuntimeMux(), facilityAPI))
-
-	handleErr(app.Run(ctx))
 }
 
 func handleErr(err error) {

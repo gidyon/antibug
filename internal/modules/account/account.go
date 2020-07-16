@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/Pallinder/go-randomdata"
 	"github.com/gidyon/antibug/internal/pkg/auth"
 	"github.com/gidyon/antibug/internal/pkg/errs"
 	"github.com/gidyon/antibug/pkg/api/account"
@@ -41,13 +40,13 @@ func NewAccountAPI(ctx context.Context, opt *Options) (account.AccountAPIServer,
 	case opt.Logger == nil:
 		err = errs.NilObject("Logger")
 	case opt.SigningKey == "":
-		err = errs.MissingField("signing key")
+		err = errs.MissingField("Jwt SigningKey")
 	}
 	if err != nil {
 		return nil, err
 	}
 
-	authAPI, err := auth.NewAPI(randomdata.RandStringRunes(32))
+	authAPI, err := auth.NewAPI(opt.SigningKey)
 	if err != nil {
 		return nil, err
 	}

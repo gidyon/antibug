@@ -1,0 +1,70 @@
+apiVersion: 1.0
+port: 443
+
+security:
+  tlsCert: /app/secrets/certs/cert
+  tlsKey: /app/secrets/certs/key
+  serverName: antibug.co.ke
+  # insecure: true
+  
+handlers:
+  staticHandlers:
+  - name: Documentation
+    rootDir: ./
+    indexFile: static/dist/index.html
+    fallbackIndex: false
+    pathPrefix: /api/antibug/documentation/
+    allowedDirs:
+    - api/swagger
+    - static/dist
+  - name: StaticFiles
+    rootDir: dist/
+    indexFile: index.html
+    fallbackIndex: false
+    pathPrefix: /app/
+    pushFiles:
+    - path: /home
+      files:
+      - abc
+
+services:
+- name: account
+  address: https://account:443
+  pathPrefixes: 
+  - /api/antibug/accounts/
+  - /api/antibug/users/
+  security:
+    tlsCert: /app/secrets/certs/cert
+    server: antibug.co.ke
+
+- name: antimicrobial
+  address: https://antimicrobial:443
+  pathPrefixes:
+  - /api/antibug/antimicrobials/
+  security:
+    tlsCert: /app/secrets/certs/cert
+    server: antibug.co.ke
+
+- name: culture
+  address: https://culture:443
+  pathPrefixes: 
+  - /api/antibug/cultures/
+  security:
+    tlsCert: /app/secrets/certs/cert
+    server: antibug.co.ke
+
+- name: facility
+  address: https://facility:443
+  pathPrefixes: 
+  - /api/antibug/facilities/
+  security:
+    tlsCert: /app/secrets/certs/cert
+    server: antibug.co.ke
+
+- name: pathogen
+  address: https://pathogen:443
+  pathPrefixes: 
+  - /api/antibug/pathogens/
+  security:
+    tlsCert: /app/secrets/certs/cert
+    server: antibug.co.ke

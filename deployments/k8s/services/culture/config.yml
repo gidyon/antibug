@@ -1,0 +1,22 @@
+serviceVersion: v1/beta
+serviceName: culture
+servicePort: 80
+startupSleepSeconds: 5
+logging:
+  level: -1
+  timeFormat: 2006-01-02T15:04:05Z07:00
+security:
+  insecure: true
+databases:
+  sqlDatabase:
+    required: true
+    address: mysqldb:3306
+    host: mysqldb
+    port: 3306
+    userFile: /app/secrets/mysql/user
+    passwordFile: /app/secrets/mysql/password
+    schemaFile: /app/secrets/mysql/schema
+    metadata:
+      name: mysql
+      dialect: mysql
+      orm: gorm

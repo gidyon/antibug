@@ -19,7 +19,7 @@ var _ = Describe("Updating Culture Resource #update", func() {
 		updateReq = &culture.UpdateCultureRequest{
 			EditorId:  fmt.Sprint(rand.Int()),
 			CultureId: fmt.Sprint(rand.Int()),
-			Culture:   fakeCulture(),
+			Culture:   FakeCulture(),
 		}
 		ctx = context.Background()
 	})
@@ -71,7 +71,7 @@ var _ = Describe("Updating Culture Resource #update", func() {
 		Context("Lets create culture first", func() {
 			It("should succeed", func() {
 				createReq := &culture.CreateCultureRequest{
-					Culture: fakeCulture(),
+					Culture: FakeCulture(),
 				}
 				createRes, err := CultureAPI.CreateCulture(ctx, createReq)
 				Expect(err).ToNot(HaveOccurred())

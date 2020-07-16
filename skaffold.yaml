@@ -1,0 +1,28 @@
+apiVersion: skaffold/v2beta4
+kind: Config
+metadata:
+  name: antibug
+build:
+  artifacts:
+  - image: gidyon/antibug-account
+    context: cmd/modules/account
+  - image: gidyon/antibug-antibiogram
+    context: cmd/modules/antibiogram
+  - image: gidyon/antibug-antimicrobial
+    context: cmd/modules/antimicrobial
+  - image: gidyon/antibug-culture
+    context: cmd/modules/culture
+  - image: gidyon/antibug-facility
+    context: cmd/modules/facility
+  - image: gidyon/antibug-pathogen
+    context: cmd/modules/pathogen
+deploy:
+  kubectl:
+    manifests:
+    - deployments/k8s/istio/antibug-gateway.yml
+    - deployments/k8s/services/account/deployment.yml
+    - deployments/k8s/services/antibiogram/deployment.yml
+    - deployments/k8s/services/antimicrobial/deployment.yml
+    - deployments/k8s/services/culture/deployment.yml
+    - deployments/k8s/services/facility/deployment.yml
+    - deployments/k8s/services/pathogen/deployment.yml

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gidyon/antibug/internal/modules"
+	"github.com/gidyon/antibug/internal/pkg/auth"
 	"github.com/gidyon/antibug/internal/pkg/errs"
 	"github.com/gidyon/antibug/pkg/api/facility"
 	"github.com/golang/protobuf/ptypes/empty"
@@ -16,6 +17,7 @@ import (
 type facilityAPIServer struct {
 	sqlDB       *gorm.DB
 	logger      grpclog.LoggerV2
+	authAPI     auth.Interface
 	counties    []*facility.County
 	subCounties []*facility.SubCounty
 	data        map[string]*facility.SubCounty
@@ -25,6 +27,7 @@ type facilityAPIServer struct {
 type Options struct {
 	SQLDB            *gorm.DB
 	Logger           grpclog.LoggerV2
+	JWTSigningKey    string
 	CountiesDataFile string
 }
 
@@ -38,7 +41,14 @@ func NewFacilityAPI(ctx context.Context, opt *Options) (facility.FacilityAPIServ
 		err = errs.NilObject("SqlDB")
 	case opt.Logger == nil:
 		err = errs.NilObject("Logger")
+	case opt.JWTSigningKey == "":
+		err = errs.MissingField("JWTSigning Key")
 	}
+	if err != nil {
+		return nil, err
+	}
+
+	authAPI, err := auth.NewAPI(opt.JWTSigningKey)
 	if err != nil {
 		return nil, err
 	}
@@ -46,6 +56,7 @@ func NewFacilityAPI(ctx context.Context, opt *Options) (facility.FacilityAPIServ
 	fapi := &facilityAPIServer{
 		sqlDB:       opt.SQLDB,
 		logger:      opt.Logger,
+		authAPI:     authAPI,
 		counties:    make([]*facility.County, 0),
 		subCounties: make([]*facility.SubCounty, 0),
 		data:        make(map[string]*facility.SubCounty, 0),
@@ -80,25 +91,27 @@ func (fapi *facilityAPIServer) AddFacility(
 		return nil, errs.NilObject("AddFacilityRequest")
 	}
 
+	// Authorize request
+	_, err := fapi.authAPI.AuthorizeGroup(ctx, auth.Admin)
+	if err != nil {
+		return nil, err
+	}
+
 	facilityPB := addReq.GetFacility()
 
 	// Validation
-	err := func() error {
-		var err error
-		switch {
-		case strings.TrimSpace(facilityPB.FacilityName) == "":
-			err = errs.MissingField("facility name")
-		case strings.TrimSpace(facilityPB.County) == "":
-			err = errs.MissingField("count name")
-		case facilityPB.CountyCode == 0:
-			err = errs.MissingField("county code")
-		case strings.TrimSpace(facilityPB.SubCounty) == "":
-			err = errs.MissingField("sub county")
-		case facilityPB.SubCountyCode == 0:
-			err = errs.MissingField("sub county code")
-		}
-		return err
-	}()
+	switch {
+	case strings.TrimSpace(facilityPB.FacilityName) == "":
+		err = errs.MissingField("facility name")
+	case strings.TrimSpace(facilityPB.County) == "":
+		err = errs.MissingField("count name")
+	case facilityPB.CountyCode == 0:
+		err = errs.MissingField("county code")
+	case strings.TrimSpace(facilityPB.SubCounty) == "":
+		err = errs.MissingField("sub county")
+	case facilityPB.SubCountyCode == 0:
+		err = errs.MissingField("sub county code")
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -133,12 +146,18 @@ func (fapi *facilityAPIServer) RemoveFacility(
 		return nil, errs.NilObject("RemoveFacilityRequest")
 	}
 
+	// Authorize request
+	_, err := fapi.authAPI.AuthorizeGroup(ctx, auth.Admin)
+	if err != nil {
+		return nil, err
+	}
+
 	if delReq.GetFacilityId() == "" {
 		return nil, errs.MissingField("facility id")
 	}
 
 	// Delete in database
-	err := fapi.sqlDB.Table(facilitiesTable).Delete(&Facility{}, "id=?", delReq.FacilityId).Error
+	err = fapi.sqlDB.Table(facilitiesTable).Delete(&Facility{}, "id=?", delReq.FacilityId).Error
 	if err != nil {
 		return nil, errs.SQLQueryFailed(err, "DELETE")
 	}
@@ -154,6 +173,12 @@ func (fapi *facilityAPIServer) GetFacility(
 		return nil, errs.NilObject("GetFacilityRequest")
 	}
 
+	// Authorize request
+	err := fapi.authAPI.AuthenticateRequest(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	// Request must not be nil
 	if getReq == nil {
 		return nil, errs.NilObject("GetFacilityRequest")
@@ -166,7 +191,7 @@ func (fapi *facilityAPIServer) GetFacility(
 
 	facilityDB := &Facility{}
 
-	err := fapi.sqlDB.First(facilityDB, "id=?", getReq.FacilityId).Error
+	err = fapi.sqlDB.First(facilityDB, "id=?", getReq.FacilityId).Error
 	switch {
 	case err == nil:
 	case errors.Is(err, gorm.ErrRecordNotFound):
@@ -184,6 +209,21 @@ func (fapi *facilityAPIServer) GetFacility(
 	return facilityPB, nil
 }
 
+const defaultPageSize = 50
+
+func normalizePageSixe(pageToken, pageSize int32) (int, int) {
+	if pageToken <= 0 {
+		pageToken = 0
+	}
+	if pageSize <= 0 {
+		pageSize = defaultPageSize
+	}
+	if pageSize > defaultPageSize {
+		pageSize = defaultPageSize
+	}
+	return int(pageToken), int(pageSize)
+}
+
 func (fapi *facilityAPIServer) ListFacilities(
 	ctx context.Context, listReq *facility.ListFacilitiesRequest,
 ) (*facility.Facilities, error) {
@@ -192,28 +232,36 @@ func (fapi *facilityAPIServer) ListFacilities(
 		return nil, errs.NilObject("ListFacilitiesRequest")
 	}
 
+	// Authorize request
+	err := fapi.authAPI.AuthenticateRequest(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	// Normalize page
-	pageNumber, pageSize := modules.NormalizePage(listReq.PageToken, listReq.PageSize)
-	offset := pageNumber*pageSize - pageSize
+	pageToken, pageSize := normalizePageSixe(listReq.PageToken, listReq.PageSize)
 
 	facilitiesDB := make([]*Facility, 0, pageSize)
-	err := fapi.sqlDB.Order("created_at DESC").Offset(offset).Limit(pageSize).
-		Find(&facilitiesDB).Error
+	err = fapi.sqlDB.Order("created_at DESC").Limit(pageSize).Order("id, created_at ASC").
+		Where("id>?", pageToken).Find(&facilitiesDB).Error
 	if err != nil {
 		return nil, errs.SQLQueryFailed(err, "LIST")
 	}
 
 	facilitiesPB := make([]*facility.Facility, 0, len(facilitiesDB))
+
 	for _, facilityDB := range facilitiesDB {
 		facilityPB, err := getFacilityPB(facilityDB)
 		if err != nil {
 			return nil, err
 		}
 		facilitiesPB = append(facilitiesPB, facilityPB)
+		pageToken = int(facilityDB.ID)
 	}
 
 	return &facility.Facilities{
-		Facilities: facilitiesPB,
+		Facilities:    facilitiesPB,
+		NextPageToken: int32(pageToken),
 	}, nil
 }
 
@@ -225,6 +273,12 @@ func (fapi *facilityAPIServer) SearchFacilities(
 		return nil, errs.NilObject("SearchFacilitiesRequest")
 	}
 
+	// Authorize request
+	err := fapi.authAPI.AuthenticateRequest(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	// For empty queries
 	if searchReq.Query == "" {
 		return &facility.Facilities{
@@ -232,14 +286,14 @@ func (fapi *facilityAPIServer) SearchFacilities(
 		}, nil
 	}
 
-	pageNumber, pageSize := modules.NormalizePage(searchReq.GetPageToken(), searchReq.GetPageSize())
-	offset := (pageNumber * pageSize) - pageSize
+	pageToken, pageSize := normalizePageSixe(searchReq.PageToken, searchReq.PageSize)
 
 	parsedQuery := modules.ParseQuery(searchReq.Query, " facilities", "facilities")
 
 	facilitiesDB := make([]*Facility, 0, pageSize)
 
-	err := fapi.sqlDB.Unscoped().Offset(offset).Limit(pageSize).
+	err = fapi.sqlDB.Unscoped().Limit(pageSize).Order("id, created_at ASC").
+		Where("id>?", pageToken).
 		Find(&facilitiesDB, "MATCH(facility_name) AGAINST(? IN BOOLEAN MODE)", parsedQuery).Error
 	switch {
 	case err == nil:
@@ -256,10 +310,11 @@ func (fapi *facilityAPIServer) SearchFacilities(
 			return nil, err
 		}
 		facilitiesPB = append(facilitiesPB, facilityPB)
+		pageToken = int(facilityDB.ID)
 	}
 
 	return &facility.Facilities{
-		NextPageToken: int32(pageNumber + 1),
+		NextPageToken: int32(pageToken),
 		Facilities:    facilitiesPB,
 	}, nil
 }
@@ -267,6 +322,12 @@ func (fapi *facilityAPIServer) SearchFacilities(
 func (fapi *facilityAPIServer) ListCounties(
 	ctx context.Context, _ *empty.Empty,
 ) (*facility.Counties, error) {
+	// Authorize request
+	err := fapi.authAPI.AuthenticateRequest(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	return &facility.Counties{
 		Counties: fapi.counties,
 	}, nil
@@ -275,6 +336,12 @@ func (fapi *facilityAPIServer) ListCounties(
 func (fapi *facilityAPIServer) ListSubCounties(
 	ctx context.Context, _ *empty.Empty,
 ) (*facility.SubCounties, error) {
+	// Authorize request
+	err := fapi.authAPI.AuthenticateRequest(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	return &facility.SubCounties{
 		SubCounties: fapi.subCounties,
 	}, nil

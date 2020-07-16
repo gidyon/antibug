@@ -302,7 +302,8 @@
           "type": "string"
         },
         "patient_age": {
-          "type": "string"
+          "type": "integer",
+          "format": "int32"
         },
         "editors": {
           "type": "array",
@@ -398,6 +399,10 @@
         },
         "result_comment": {
           "type": "string"
+        },
+        "susceptibility_score": {
+          "type": "number",
+          "format": "float"
         },
         "label": {
           "$ref": "#/definitions/antibugcultureLabel"
